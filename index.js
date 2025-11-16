@@ -13,7 +13,7 @@ app.listen(PORT, () => {
 const fs = require('fs');
 const path = require('path');
 const { Client, GatewayIntentBits, Collection, EmbedBuilder } = require('discord.js');
-const userData = require('./userData');
+const userData = require('./userdata');
 const guessCommand = require('./commands/guess'); // Import guess command module
 
 const client = new Client({
