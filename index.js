@@ -99,7 +99,7 @@ client.on('messageCreate', async (message) => {
   }
 
   // Drop a new key with 5% chance if none active
-  if(!currentKey && Math.random() <= 0.90) {
+  if(!currentKey && Math.random() <= 0.05) {
     const rarity = getRandomRarity();
     currentKey = { rarity, channelId: message.channel.id, claimed: false };
     const dropEmbed = new EmbedBuilder()
