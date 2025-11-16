@@ -28,7 +28,7 @@ client.commands = new Collection();
 const prefix = '!';
 
 // Admin Role ID for guess game permission
-const ADMIN_ROLE_ID = 'YOUR_ADMIN_ROLE_ID_HERE';
+const ADMIN_ROLE_ID = '1439504588318314496';
 
 // Load commands dynamically
 const commandsPath = path.join(__dirname, 'commands');
