@@ -1,7 +1,16 @@
 require('dotenv').config();
-const { Client, Collection, GatewayIntentBits } = require('discord.js');
+const fs = require('fs');
+const path = require('path');
 const express = require('express');
+const { Client, Collection, GatewayIntentBits } = require('discord.js');
 
+// Express server setup for Render 24/7 uptime
+const app = express();
+const PORT = process.env.PORT || 3000;
+app.get('/', (req, res) => res.send('Bot is running'));
+app.listen(PORT, () => console.log(`Web server started on port ${PORT}`));
+
+// Create Discord client with intents for messages and guilds
 const client = new Client({
   intents: [
     GatewayIntentBits.Guilds,
@@ -10,57 +19,55 @@ const client = new Client({
   ],
 });
 
-// Simple web server to keep bot alive on Render
-const app = express();
-const PORT = process.env.PORT || 3000;
-
-app.get('/', (req, res) => {
-  res.send('Bot is running');
-});
-
-app.listen(PORT, () => {
-  console.log(`Web server started on port ${PORT}`);
-});
-
-// Command handling setup
 client.commands = new Collection();
-const fs = require('fs');
-const path = require('path');
 
+// Load command files dynamically from ./commands folder
 const commandsPath = path.join(__dirname, 'commands');
-const commandFiles = fs
-  .readdirSync(commandsPath)
-  .filter(file => file.endsWith('.js'));
-
+const commandFiles = fs.readdirSync(commandsPath).filter(file => file.endsWith('.js'));
 for (const file of commandFiles) {
-  const filePath = path.join(commandsPath, file);
-  const command = require(filePath);
-  if ('name' in command && 'execute' in command) {
+  const command = require(path.join(commandsPath, file));
+  if (command.name && command.execute) {
     client.commands.set(command.name, command);
   } else {
-    console.log(`[WARNING] The command at ${filePath} is missing a required "name" or "execute" property.`);
+    console.log(`[WARNING] Command file ${file} missing name or execute property.`);
   }
+}
+
+// Simple in-memory user data object for demo (replace with persistent storage)
+const userData = {};
+function saveUserData() {
+  // Implement file or database saving here if needed
+  // For example: fs.writeFileSync('userData.json', JSON.stringify(userData));
 }
 
 client.once('ready', () => {
   console.log(`Logged in as ${client.user.tag}!`);
 });
 
-client.on('messageCreate', async message => {
-  // Ignore messages from bots or without prefix
-  if (message.author.bot || !message.content.startsWith('!')) return;
+// Command prefix
+const prefix = '!';
 
-  const args = message.content.slice(1).trim().split(/ +/);
+client.on('messageCreate', async (message) => {
+  if (message.author.bot) return;
+  if (!message.content.startsWith(prefix)) return;
+
+  const args = message.content.slice(prefix.length).trim().split(/ +/);
   const commandName = args.shift().toLowerCase();
 
   const command = client.commands.get(commandName);
   if (!command) return;
 
   try {
-    await command.execute({ message, args, client, data: yourDataObject, saveUserData: yourSaveFunction, addKeyToInventory: yourAddKeyFunction });
+    await command.execute({
+      message,
+      args,
+      client,
+      data: userData,
+      saveUserData,
+    });
   } catch (error) {
     console.error(error);
-    message.reply('There was an error executing that command.');
+    message.reply('There was an error trying to execute that command.');
   }
 });
 
