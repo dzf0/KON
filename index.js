@@ -34,7 +34,7 @@ for (const file of commandFiles) {
 let userData = {};
 function loadUserData() {
   try {
-    if(fs.existsSync('./userData.json')) {
+    if(fs.existsSync('./data.json')) {
       userData = JSON.parse(fs.readFileSync('./data.json', 'utf-8'));
     }
   } catch (e) {
@@ -52,10 +52,10 @@ loadUserData();
 
 // Key rarities
 const rarities = [
-  { name: 'Prismatic', chance: 0.001 },
-  { name: 'Mythical', chance: 0.01 },
-  { name: 'Legendary', chance: 0.05 },
-  { name: 'Rare', chance: 0.15 },
+  { name: 'Prismatic', chance: 0.01 },
+  { name: 'Mythical', chance: 0.05 },
+  { name: 'Legendary', chance: 0.10 },
+  { name: 'Rare', chance: 0.20 },
   { name: 'Uncommon', chance: 0.30 },
   { name: 'Common', chance: 0.50 },
 ];
@@ -84,7 +84,7 @@ client.on('messageCreate', async (message) => {
 
   // Existing unclaimed key expires with 5% chance on message
   if(currentKey && !currentKey.claimed) {
-    if(Math.random() <= 0.05) {
+    if(Math.random() <= 0.10) {
       const channel = client.channels.cache.get(currentKey.channelId);
       if(channel) {
         const expireEmbed = new EmbedBuilder()
@@ -99,7 +99,7 @@ client.on('messageCreate', async (message) => {
   }
 
   // Drop a new key with 5% chance if none active
-  if(!currentKey && Math.random() <= 0.05) {
+  if(!currentKey && Math.random() <= 0.10) {
     const rarity = getRandomRarity();
     currentKey = { rarity, channelId: message.channel.id, claimed: false };
     const dropEmbed = new EmbedBuilder()
