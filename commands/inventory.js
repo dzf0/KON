@@ -2,33 +2,44 @@ const { EmbedBuilder } = require('discord.js');
 
 module.exports = {
   name: 'inventory',
-  description: 'Display your inventory items.',
-  async execute({ message, data }) {
-    const userId = message.author.id;
-    const userData = data[userId];
+  description: 'Shows your inventory.',
+  async execute({ message, userData }) {
+    try {
+      const userId = message.author.id;
 
-    if (!userData || !userData.inventory || Object.keys(userData.inventory).length === 0) {
-      const emptyEmbed = new EmbedBuilder()
-        .setColor('#FFA500')
-        .setTitle('Inventory')
-        .setDescription('Your inventory is empty.');
+      // Initialize user data if it doesn't exist
+      if (!userData[userId]) {
+        userData[userId] = { balance: 0, inventory: {} };
+      }
+      if (!userData[userId].inventory) {
+        userData[userId].inventory = {};
+      }
 
-      return message.channel.send({ embeds: [emptyEmbed] });
+      const inventory = userData[userId].inventory;
+
+      if (Object.keys(inventory).length === 0) {
+        return message.channel.send('Your inventory is empty.');
+      }
+
+      // Build inventory string
+      let inventoryList = '';
+      for (const [item, amount] of Object.entries(inventory)) {
+        inventoryList += `**${item}**: ${amount}\n`;
+      }
+
+      // Create embed message
+      const embed = new EmbedBuilder()
+        .setTitle(`${message.author.username}'s Inventory`)
+        .setDescription(inventoryList)
+        .setColor('#0099ff')
+        .setTimestamp();
+
+      await message.channel.send({ embeds: [embed] });
+
+    } catch (error) {
+      console.error('Error executing inventory command:', error);
+      message.channel.send('❌ There was an error displaying your inventory.');
     }
-
-    const embed = new EmbedBuilder()
-      .setTitle(`${message.author.username}'s Inventory`)
-      .setColor('#00BFFF')
-      .setTimestamp();
-
-    let description = '';
-
-    for (const [item, quantity] of Object.entries(userData.inventory)) {
-      description += `**${item}**: ${quantity}\n`;
-    }
-
-    embed.setDescription(description);
-
-    message.channel.send({ embeds: [embed] });
   },
 };
+
