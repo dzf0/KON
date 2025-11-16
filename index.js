@@ -43,7 +43,7 @@ function loadUserData() {
 }
 function saveUserData() {
   try {
-    fs.writeFileSync('./userData.json', JSON.stringify(userData, null, 2));
+    fs.writeFileSync('./data.json', JSON.stringify(userData, null, 2));
   } catch(e) {
     console.error('Failed to save user data:', e);
   }
@@ -84,7 +84,7 @@ client.on('messageCreate', async (message) => {
 
   // Existing unclaimed key expires with 5% chance on message
   if(currentKey && !currentKey.claimed) {
-    if(Math.random() <= 0.90) {
+    if(Math.random() <= 0.05) {
       const channel = client.channels.cache.get(currentKey.channelId);
       if(channel) {
         const expireEmbed = new EmbedBuilder()
