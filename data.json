@@ -11,7 +11,8 @@
     "balance": 10000,
     "inventory": {
       "Common": 1,
-      "Uncommon": 1
+      "Uncommon": 1,
+      "kitteh": 1
     }
   }
 }
