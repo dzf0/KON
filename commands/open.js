@@ -1,100 +1,75 @@
 const { EmbedBuilder } = require('discord.js');
 
+const validRarities = [
+  'Prismatic', 'Mythical', 'Legendary', 'Rare', 'Uncommon', 'Common'
+];
+
 module.exports = {
   name: 'open',
-  description: 'Open a specified amount of keys of a certain rarity.',
-  async execute({ message, args, data, saveUserData }) {
+  description: 'Open one or more keys of the given rarity to receive prizes.',
+  async execute({ message, args, userData, saveUserData }) {
     try {
-      if (args.length < 2) {
-        const embed = new EmbedBuilder()
-          .setColor('#FFAA00')
-          .setTitle('Invalid Usage')
-          .setDescription('Usage: !open <rarity> <amount>');
-        return message.channel.send({ embeds: [embed] });
+      const rarityArg = args[0];
+      if (!rarityArg) {
+        return message.channel.send('Please specify a key rarity to open (e.g., `!open Rare`).');
       }
 
-      const rarityInput = args[0];
-      const rarity = rarityInput.toLowerCase();
-      const amount = parseInt(args[1]);
-      if (isNaN(amount) || amount <= 0) {
-        const embed = new EmbedBuilder()
-          .setColor('#FF0000')
-          .setTitle('Invalid Amount')
-          .setDescription('Please specify a valid positive amount greater than 0.');
-        return message.channel.send({ embeds: [embed] });
+      // Case-insensitive rarity match
+      const rarity = validRarities.find(
+        r => r.toLowerCase() === rarityArg.toLowerCase()
+      );
+      if (!rarity) {
+        return message.channel.send('Invalid key rarity specified.');
       }
 
-      const userInventory = data[message.author.id]?.inventory || {};
+      // Parse amount, default to 1
+      let amount = parseInt(args[1]);
+      if (isNaN(amount) || amount <= 0) amount = 1;
 
-      // Find matching key ignoring case
-      let keyFound = null;
-      for (const invKey in userInventory) {
-        if (invKey.toLowerCase() === rarity) {
-          keyFound = invKey;
-          break;
-        }
+      // Defensive user data initialization
+      const userId = message.author.id;
+      if (!userData || typeof userData !== 'object') {
+        return message.channel.send('User data is not available.');
+      }
+      if (!userData[userId] || typeof userData[userId] !== 'object') {
+        userData[userId] = { balance: 0, inventory: {} };
+      }
+      if (!userData[userId].inventory || typeof userData[userId].inventory !== 'object') {
+        userData[userId].inventory = {};
       }
 
-      if (!keyFound || userInventory[keyFound] < amount) {
-        const embed = new EmbedBuilder()
-          .setColor('#FF0000')
-          .setTitle('Insufficient Keys')
-          .setDescription(`You do not have enough ${rarityInput} key(s) to open.`);
-        return message.channel.send({ embeds: [embed] });
+      // Check key quantity
+      const currentAmount = userData[userId].inventory[rarity] || 0;
+      if (currentAmount < amount) {
+        return message.channel.send(`You do not have enough **${rarity}** keys to open (**${amount}** requested, you have **${currentAmount}**).`);
       }
 
-      // Remove keys
-      userInventory[keyFound] -= amount;
-      if (userInventory[keyFound] <= 0) delete userInventory[keyFound];
-
-      // Calculate rewards
-      let totalKan = 0;
+      // Open keys, compute total reward
+      let totalReward = 0;
+      const minReward = 10, maxReward = 100;
       for (let i = 0; i < amount; i++) {
-        let reward = 0;
-        switch (keyFound.toLowerCase()) {
-          case 'prismatic':
-            reward = Math.floor(Math.random() * 1000) + 1000;
-            break;
-          case 'mythical':
-            reward = Math.floor(Math.random() * 500) + 500;
-            break;
-          case 'legendary':
-            reward = Math.floor(Math.random() * 300) + 200;
-            break;
-          case 'rare':
-            reward = Math.floor(Math.random() * 100) + 100;
-            break;
-          case 'uncommon':
-            reward = Math.floor(Math.random() * 50) + 50;
-            break;
-          case 'common':
-            reward = Math.floor(Math.random() * 30) + 10;
-            break;
-          default:
-            reward = 0;
-        }
-        totalKan += reward;
+        totalReward += Math.floor(Math.random() * (maxReward - minReward + 1)) + minReward;
       }
 
-      if (!data[message.author.id].balance) data[message.author.id].balance = 0;
-      data[message.author.id].balance += totalKan;
-
-      saveUserData(data);
+      userData[userId].inventory[rarity] -= amount;
+      userData[userId].balance += totalReward;
+      saveUserData();
 
       const embed = new EmbedBuilder()
-        .setColor('#00FF00')
-        .setTitle('Keys Opened')
-        .setDescription(`${message.author} opened ${amount} ${keyFound} key(s) and received a total of ${totalKan} 𝓚𝓪𝓷!`)
+        .setColor('Gold')
+        .setTitle('Keys Opened!')
+        .setDescription(`${message.author} opened **${amount} ${rarity}** key${amount > 1 ? 's' : ''} and received **${totalReward} coins**!`)
+        .addFields(
+          { name: 'Keys left', value: `${userData[userId].inventory[rarity]}`, inline: true },
+          { name: 'New Balance', value: `${userData[userId].balance} coins`, inline: true }
+        )
         .setTimestamp();
 
-      message.channel.send({ embeds: [embed] });
+      await message.channel.send({ embeds: [embed] });
+
     } catch (error) {
       console.error('Error in open command:', error);
-      const embed = new EmbedBuilder()
-        .setColor('#FF0000')
-        .setTitle('Error')
-        .setDescription('There was an error executing the open command. Please try again later.');
-      message.channel.send({ embeds: [embed] });
+      message.channel.send('❌ Something went wrong while opening your key(s).');
     }
-  },
+  }
 };
