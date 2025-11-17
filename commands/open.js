@@ -9,11 +9,11 @@ module.exports = {
   description: 'Open one or more keys of the given rarity to receive prizes.',
   async execute({ message, args, userData, saveUserData }) {
     try {
+      // === Parse Arguments ===
       const rarityArg = args[0];
       if (!rarityArg) {
-        return message.channel.send('Please specify a key rarity to open (e.g., `!open Rare`).');
+        return message.channel.send('Please specify a key rarity to open (e.g. `!open Rare`).');
       }
-
       // Case-insensitive rarity match
       const rarity = validRarities.find(
         r => r.toLowerCase() === rarityArg.toLowerCase()
@@ -21,30 +21,35 @@ module.exports = {
       if (!rarity) {
         return message.channel.send('Invalid key rarity specified.');
       }
-
       // Parse amount, default to 1
       let amount = parseInt(args[1]);
       if (isNaN(amount) || amount <= 0) amount = 1;
 
-      // Defensive user data initialization
+      // === Defensive User Data Checks ===
       const userId = message.author.id;
       if (!userData || typeof userData !== 'object') {
-        return message.channel.send('User data is not available.');
+        return message.channel.send('Bot error: user data is not available.');
       }
+      // If not present, create an entry for this user
       if (!userData[userId] || typeof userData[userId] !== 'object') {
         userData[userId] = { balance: 0, inventory: {} };
       }
+      // Inventory must be an object
       if (!userData[userId].inventory || typeof userData[userId].inventory !== 'object') {
         userData[userId].inventory = {};
       }
+      // Ensure keys property exists and is a number
+      if (typeof userData[userId].inventory[rarity] !== 'number') {
+        userData[userId].inventory[rarity] = 0;
+      }
 
-      // Check key quantity
-      const currentAmount = userData[userId].inventory[rarity] || 0;
+      // === Does User Have Enough Keys? ===
+      const currentAmount = userData[userId].inventory[rarity];
       if (currentAmount < amount) {
         return message.channel.send(`You do not have enough **${rarity}** keys to open (**${amount}** requested, you have **${currentAmount}**).`);
       }
 
-      // Open keys, compute total reward
+      // === Open Keys, Give Rewards ===
       let totalReward = 0;
       const minReward = 10, maxReward = 100;
       for (let i = 0; i < amount; i++) {
