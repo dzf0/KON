@@ -8,10 +8,10 @@
     "inventory": {}
   },
   "1349792214124986419": {
-    "balance": 10000,
+    "balance": 10087,
     "inventory": {
       "Common": 1,
-      "Uncommon": 1,
+      "Uncommon": 0,
       "kitteh": 1
     }
   }
