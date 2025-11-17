@@ -10,7 +10,8 @@
   "1349792214124986419": {
     "balance": 10000,
     "inventory": {
-      "Common": 1
+      "Common": 1,
+      "Uncommon": 1
     }
   }
 }
