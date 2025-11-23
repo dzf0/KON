@@ -49,6 +49,15 @@ function saveUserData() {
     console.error('Failed to save user data:', e);
   }
 }
+
+// --- Add this function below saveUserData ---
+function addKeyToInventory(userId, rarity, quantity) {
+  userData[userId] = userData[userId] || { inventory: {}, balance: 0 };
+  userData[userId].inventory[rarity] = (userData[userId].inventory[rarity] || 0) + quantity;
+  saveUserData();
+}
+// --------------------------------------------
+
 loadUserData();
 
 const rarities = [
@@ -123,6 +132,7 @@ client.on('messageCreate', async (message) => {
       args,
       userData,
       saveUserData,
+      addKeyToInventory, // <-- Added here!
       keydrop,
       guessGame,
       rarities,
