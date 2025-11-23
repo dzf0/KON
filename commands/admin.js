@@ -1,35 +1,14 @@
 const { EmbedBuilder } = require('discord.js');
-const fs = require('fs');
-const path = './data.json'; // Adjust if your data file is elsewhere
+const { loadUserData, saveUserData } = require('./userdata.js'); // Import userdata functions
 
-const ADMIN_ROLE_ID = '1439504588318314496'; // Replace with your actual admin role ID
+const ADMIN_ROLE_ID = '1439504588318314496'; // Replace with your admin role ID
 
 const validRarities = [
   'Prismatic', 'Mythical', 'Legendary', 'Rare', 'Uncommon', 'Common'
 ];
 
-// Helper
 function toProperCase(str) {
   return str.charAt(0).toUpperCase() + str.slice(1).toLowerCase();
-}
-
-function loadUserData() {
-  try {
-    if (fs.existsSync(path)) {
-      return JSON.parse(fs.readFileSync(path, 'utf-8'));
-    }
-  } catch (e) {
-    console.error('Failed to load user data:', e);
-  }
-  return {};
-}
-
-function saveUserData(data) {
-  try {
-    fs.writeFileSync(path, JSON.stringify(data, null, 2));
-  } catch (e) {
-    console.error('Failed to save user data:', e);
-  }
 }
 
 module.exports = {
@@ -76,6 +55,7 @@ module.exports = {
 
       let rarityKey = null;
       let amountIndex = 2;
+
       if (type === 'keys') {
         const rarityArg = args[2];
         rarityKey = toProperCase(rarityArg);
@@ -108,7 +88,6 @@ module.exports = {
 
       const userId = userMention.id;
 
-      // Defensive initialization
       if (!data[userId] || typeof data[userId] !== 'object') data[userId] = { balance: 0, inventory: {} };
       if (!data[userId].inventory || typeof data[userId].inventory !== 'object') data[userId].inventory = {};
       if (typeof data[userId].balance !== 'number') data[userId].balance = 0;
