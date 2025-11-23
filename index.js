@@ -3,7 +3,7 @@ const fs = require('fs');
 const path = require('path');
 const express = require('express');
 const { Client, GatewayIntentBits, Collection, EmbedBuilder } = require('discord.js');
-const keydrop = require('./keydrop'); // Import keydrop module
+const keydrop = require('./keydrop.js'); // Import keydrop module
 
 // Start Express server to keep bot awake on some hosts
 const app = express();
