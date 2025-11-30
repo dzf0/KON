@@ -2,33 +2,88 @@ const { EmbedBuilder } = require('discord.js');
 
 module.exports = {
   name: 'help',
-  description: 'Show a list of available commands with usage.',
-  async execute({ message }) {
+  description: 'Show all available commands.',
+  async execute({ message, prefix }) {
     const embed = new EmbedBuilder()
-      .setTitle('Help - Command List')
-      .setColor('#00BFFF')
-      .setDescription('Here is a list of all commands and their usage:')
+      .setTitle('📖 Help Menu')
+      .setDescription(`Prefix: \`${prefix}\`\nHere are all available commands:`)
+      .setColor('#00AAFF')
       .addFields(
-        { name: '!admin give keys <rarity> <amount> <@user>', value: 'Give keys to user (admin only).' },
-        { name: '!admin give currency <amount> <@user>', value: 'Give 𝓚𝓪𝓷 currency to user (admin only).' },
-        { name: '!admin remove keys <rarity> <amount> <@user>', value: 'Remove keys from user (admin only).' },
-        { name: '!admin remove currency <amount> <@user>', value: 'Remove 𝓚𝓪𝓷 currency from user (admin only).' },
-        { name: '!admin removekan <@user> <amount>', value: 'Remove only 𝓚𝓪𝓷 currency from user (admin only).' },
-        { name: '!admin resetstats <user_id>', value: 'Reset a user\'s stats and inventory (admin only).' },
-        { name: '!admin reset <user_id>', value: 'Reset a user\'s entire data (admin only).' },
-        { name: '!claim', value: 'Claim a dropped key if available.' },
-        { name: '!open <rarity> <amount>', value: 'Open a specified amount of keys to get rewards.' },
-        { name: '!buy <item> [quantity]', value: 'Buy items from the shop.' },
-        { name: '!inventory', value: 'View your inventory items and quantities.' },
-        { name: '!balance [@user]', value: 'Check your or another user\'s 𝓚𝓪𝓷 balance.' },
-        { name: '!coinflip <amount>', value: 'Flip a coin and bet 𝓚𝓪𝓷 currency.' },
-        { name: '!rps <rock|paper|scissors>', value: 'Play rock-paper-scissors against the bot.' },
-        { name: '!slots <amount>', value: 'Play a slots machine game with bets.' },
-        { name: '!guess [number|stop]', value: 'Admins start/stop guessing game; users guess numbers.' },
-        { name: '!help [command]', value: 'Show this help or detailed info for a specific command.' },
+        {
+          name: 'Economy',
+          value: [
+            `\`${prefix}bal\` - Show your current balance.`,
+            `\`${prefix}inventory\` - View your keys and items.`,
+            `\`${prefix}buy\` - Buy items from the shop.`,
+            `\`${prefix}shop\` - View the shop items.`,
+            `\`${prefix}claim\` - Claim a dropped key if one is active.`
+          ].join('\n'),
+          inline: false
+        },
+        {
+          name: 'Gambling & Games',
+          value: [
+            `\`${prefix}cf <amount> <h|t>\` - Coin flip betting game.`,
+            `\`${prefix}slots <amount>\` - Slot machine, win up to 10x.`,
+            `\`${prefix}dice <amount>\` - Dice game, high rolls pay more.`,
+            `\`${prefix}rps <amount> <rock|paper|scissors>\` - Rock, paper, scissors vs bot.`,
+            `\`${prefix}roulette <amount> <red|black|green|0-36>\` - Roulette wheel bets.`,
+            `\`${prefix}hl <amount>\` - Higher or Lower number streak game.`,
+            `\`${prefix}blackjack <amount>\` - Blackjack with reactions (hit/stand).`,
+            `\`${prefix}minesweeper start <size> <mines> <bet>\` - Start your own minesweeper game.`,
+            `\`${prefix}minesweeper pick <tile>\` - Pick a tile in your minesweeper game.`,
+            `\`${prefix}minesweeper cancel\` - Cancel your minesweeper game.`
+          ].join('\n'),
+          inline: false
+        },
+        {
+          name: 'Lottery',
+          value: [
+            `\`${prefix}lottery buy\` - Buy a lottery ticket.`,
+            `\`${prefix}lottery status\` - Check lottery pot and ticket count.`,
+            `\`${prefix}lottery draw\` - Draw a lottery winner (staff only).`
+          ].join('\n'),
+          inline: false
+        },
+        {
+          name: 'Trivia & Word Games',
+          value: [
+            `\`${prefix}trivia\` - Answer a trivia question for rewards.`,
+            `\`${prefix}wordscramble start <word>\` - (staff) Start a word scramble in the game channel.`,
+            `\`${prefix}wordscramble cancel\` - (staff) Cancel active word scramble.`,
+            `\`${prefix}hangman start <word>\` - (staff) Start a hangman game in the game channel.`,
+            `\`${prefix}hangman guess <letter>\` - Guess a letter in hangman.`,
+            `\`${prefix}hangman cancel\` - (staff) Cancel the current hangman game.`
+          ].join('\n'),
+          inline: false
+        },
+        {
+          name: 'Keydrop & Passive',
+          value: [
+            `\`${prefix}claim\` - Claim the active dropped key (from keydrop system).`
+          ].join('\n'),
+          inline: false
+        },
+        {
+          name: 'Admin / Staff Only',
+          value: [
+            `\`${prefix}admin give currency <amount> @user\` - Give currency to a user.`,
+            `\`${prefix}admin remove currency <amount> @user\` - Remove currency from a user.`,
+            `\`${prefix}admin give keys <rarity> <amount> @user\` - Give keys of a rarity.`,
+            `\`${prefix}admin remove keys <rarity> <amount> @user\` - Remove keys of a rarity.`,
+            `\`${prefix}admin reset @user\` - Reset all data for a user.`,
+            `\`${prefix}lottery draw\` - Draw the lottery winner.`,
+            `\`${prefix}wordscramble start <word>\` - Start a word scramble round.`,
+            `\`${prefix}wordscramble cancel\` - Cancel word scramble.`,
+            `\`${prefix}hangman start <word>\` - Start hangman with a secret word.`,
+            `\`${prefix}hangman cancel\` - Cancel current hangman game.`
+          ].join('\n'),
+          inline: false
+        }
       )
+      .setFooter({ text: 'Use each command for more details and correct arguments.' })
       .setTimestamp();
 
-    message.channel.send({ embeds: [embed] });
-  },
+    await message.channel.send({ embeds: [embed] });
+  }
 };
