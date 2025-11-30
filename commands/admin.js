@@ -1,6 +1,6 @@
 const { EmbedBuilder } = require('discord.js');
 
-const ADMIN_ROLE_ID = '1439504588318314496'; // Replace with your admin role ID
+const ADMIN_ROLE_ID = '1382513369801555988'; // Replace with your admin role ID
 
 const validRarities = [
   'Prismatic', 'Mythical', 'Legendary', 'Rare', 'Uncommon', 'Common'

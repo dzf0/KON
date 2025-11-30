@@ -13,8 +13,8 @@ const hangmanStages = [
   '``````'
 ];
 
-const ADMIN_ROLE_ID = '1439504588318314496'; // Replace with your admin role ID
-const GAME_CHANNEL_ID = '1348651274396241933'; // Replace with your game channel ID
+const ADMIN_ROLE_ID = '1382513369801555988'; // Replace with your admin role ID
+const GAME_CHANNEL_ID = '1401925188991582338'; // Replace with your game channel ID
 
 module.exports = {
   name: 'hangman',
