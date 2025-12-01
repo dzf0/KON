@@ -1,7 +1,7 @@
 const { EmbedBuilder } = require('discord.js');
 
 const AUTH_ROLE_ID = '1382513369801555988'; // Replace with your role ID for setters
-const GAME_CHANNEL_ID = '1401925188991582338'; // Replace with your game channel ID (e.g., #general)
+const GAME_CHANNEL_ID = '1405349401945178152'; // Replace with your game channel ID (e.g., #general)
 
 let activeScramble = null; // Only one scramble at a time
 

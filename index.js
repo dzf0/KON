@@ -59,25 +59,6 @@ function addKeyToInventory(userId, rarity, quantity) {
 }
 // --------------------------------------------
 
-loadUserData();
-
-const rarities = [
-  { name: 'Prismatic', chance: 0.01 },
-  { name: 'Mythical', chance: 0.05 },
-  { name: 'Legendary', chance: 0.10 },
-  { name: 'Rare', chance: 0.20 },
-  { name: 'Uncommon', chance: 0.30 },
-  { name: 'Common', chance: 0.50 },
-];
-
-const rewardsByRarity = {
-  Prismatic: { min: 500, max: 1000 },
-  Mythical: { min: 300, max: 600 },
-  Legendary: { min: 200, max: 400 },
-  Rare: { min: 100, max: 200 },
-  Uncommon: { min: 50, max: 100 },
-  Common: { min: 10, max: 50 },
-};
 
 let guessGame = {
   active: false,
