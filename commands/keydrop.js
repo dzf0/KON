@@ -13,7 +13,7 @@ const rarities = [
   { name: 'Legendary', chance: 0.01 },
   { name: 'Rare', chance: 0.05 },
   { name: 'Uncommon', chance: 0.10 },
-  { name: 'Common', chance: 0.20 }
+  { name: 'Common', chance: 0.15 }
 ];
 
 // Utility function
@@ -36,7 +36,7 @@ async function handleKeyDrop(message, client) {
 
   // Expiration: expire active key randomly (10% chance)
   if (currentKey && !currentKey.claimed) {
-    if (Math.random() <= 0.05) {
+    if (Math.random() <= 0.03) {
       const channel = client.channels.cache.get(currentKey.channelId);
       if (channel) {
         const expireEmbed = new EmbedBuilder()
