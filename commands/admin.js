@@ -185,7 +185,6 @@ module.exports = {
           ]
         });
       }
-      // Reset to fresh state
       await saveUserData(userId, { balance: 0, inventory: {} });
       return message.channel.send({
         embeds: [
@@ -196,7 +195,6 @@ module.exports = {
         ]
       });
     } else if (subcommand === 'spawn') {
-      // .admin spawn <rarity> <channel_id>
       const rarityArg = args[1];
       const channelId = args[2];
 
@@ -206,7 +204,10 @@ module.exports = {
             new EmbedBuilder()
               .setColor('Yellow')
               .setTitle('Invalid Usage')
-              .setDescription('Usage: `.admin spawn <rarity> <channel_id>`\nExample: `.admin spawn Legendary 1405349401945178152`\n\nValid rarities: ' + validRarities.join(', '))
+              .setDescription('Usage: `.admin spawn <rarity> <channel_id>`
+Example: `.admin spawn Legendary 1405349401945178152`
+
+Valid rarities: ' + validRarities.join(', '))
           ]
         });
       }
@@ -224,7 +225,6 @@ module.exports = {
         });
       }
 
-      // Check if channel exists
       const channel = message.client.channels.cache.get(channelId);
       if (!channel) {
         return message.channel.send({
@@ -237,7 +237,6 @@ module.exports = {
         });
       }
 
-      // Call spawnKey from keydrop.js
       try {
         const result = await keydrop.spawnKey(rarityKey, channelId, message.client);
 
