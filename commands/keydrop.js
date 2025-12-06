@@ -1,6 +1,6 @@
 const { EmbedBuilder } = require('discord.js');
 
-const KEYDROP_CHANNEL_ID = '1405349401945178152';
+const KEYDROP_CHANNEL_ID = '1401925188991582338';
 
 let currentKey = null;
 
