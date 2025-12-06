@@ -1,7 +1,7 @@
 const { EmbedBuilder } = require('discord.js');
 
-const GUESS_ADMIN_ROLE_ID = '1382513369801555988'; // Replace with your role ID
-const GUESS_CHANNEL_ID = '1405349401945178152'; // Replace with your game channel ID
+const GUESS_ADMIN_ROLE_ID = '1382513369801555988';
+const GUESS_CHANNEL_ID = '1405349401945178152';
 
 const guessGameState = {
   active: false,
@@ -31,31 +31,21 @@ function getRandomRarity(rarities) {
 module.exports = {
   name: 'guess',
   description: 'Guess a number game with admin controls.',
-  async execute({ message, args, userData, saveUserData, addKeyToInventory, updateUserBalance }) {
+  async execute({ message, args, userData, saveUserData, addKeyToInventory }) {
     const sub = (args[0] || '').toLowerCase();
     const isAdmin = message.member.roles.cache.has(GUESS_ADMIN_ROLE_ID);
 
-    // Admin command to start game
     if (sub === 'start') {
       if (!isAdmin) {
-        const noPermEmbed = new EmbedBuilder()
-          .setColor('#FF0000')
-          .setTitle('Permission Denied')
-          .setDescription('Only admins can start the guessing game.');
-        return message.channel.send({ embeds: [noPermEmbed] });
+        return message.channel.send('Only admins can start the guessing game.');
       }
 
-      // Enforce specific channel
       if (message.channel.id !== GUESS_CHANNEL_ID) {
-        return message.channel.send(`❌ The guessing game can only be started in <#${GUESS_CHANNEL_ID}>.`);
+        return message.channel.send('This game can only be started in the game channel.');
       }
 
       if (guessGameState.active) {
-        const alreadyEmbed = new EmbedBuilder()
-          .setColor('#FFA500')
-          .setTitle('Game Already Running')
-          .setDescription('There is already an active guessing game.');
-        return message.channel.send({ embeds: [alreadyEmbed] });
+        return message.channel.send('A game is already running.');
       }
 
       const num = Math.floor(Math.random() * 500) + 1;
@@ -64,48 +54,29 @@ module.exports = {
       guessGameState.channelId = message.channel.id;
 
       const startEmbed = new EmbedBuilder()
-        .setColor('#00FFFF')
-        .setTitle('Guessing Game Started!')
-        .setDescription('Guess the number between 1 and 500 by typing numbers in chat. First correct guess wins!');
+        .setColor('00FFFF')
+        .setTitle('Guessing Game Started')
+        .setDescription('Guess the number between 1 and 500.');
       return message.channel.send({ embeds: [startEmbed] });
     }
 
-    // Admin command to stop game
     if (sub === 'stop') {
       if (!isAdmin) {
-        const noPermEmbed = new EmbedBuilder()
-          .setColor('#FF0000')
-          .setTitle('Permission Denied')
-          .setDescription('Only admins can stop the guessing game.');
-        return message.channel.send({ embeds: [noPermEmbed] });
+        return message.channel.send('Only admins can stop the game.');
       }
 
       if (!guessGameState.active) {
-        const noGameEmbed = new EmbedBuilder()
-          .setColor('#FFA500')
-          .setTitle('No Active Game')
-          .setDescription('There is no guessing game currently running.');
-        return message.channel.send({ embeds: [noGameEmbed] });
+        return message.channel.send('No game is running.');
       }
 
       guessGameState.active = false;
       guessGameState.number = null;
       guessGameState.channelId = null;
 
-      const stoppedEmbed = new EmbedBuilder()
-        .setColor('#00FF00')
-        .setTitle('Game Stopped')
-        .setDescription('The guessing game has been stopped by an admin.');
-      return message.channel.send({ embeds: [stoppedEmbed] });
+      return message.channel.send('Game stopped.');
     }
 
-    // Help/default
-    return message.channel.send(
-      '**Guessing Game Commands:**\n' +
-      '`.guess start` - Start a new game (admin only, in game channel)\n' +
-      '`.guess stop` - Stop the current game (admin only)\n\n' +
-      'Players: Just type a number in the game channel while a game is active!'
-    );
+    return message.channel.send('Use .guess start or .guess stop');
   },
 
   guessGameState,
