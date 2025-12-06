@@ -206,7 +206,7 @@ module.exports = {
               .setTitle('Invalid Usage')
               .setDescription('Usage: `.admin spawn <rarity> <channel_id>` ' + 
                               
-                              'Example: `.admin spawn Legendary 1405349401945178152` + 
+                              'Example: `.admin spawn Legendary 1405349401945178152` ' + 
                               
                               'Valid rarities:' + validRarities.join(', '))
           ]
@@ -272,5 +272,6 @@ module.exports = {
     }
   }
 };
+
 
 
