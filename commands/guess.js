@@ -52,11 +52,8 @@ module.exports = {
         .setColor('#00FFFF')
         .setTitle('Guessing Game Started!')
         .setDescription(
-          'A new guessing game has begun!
-' +
-          'Guess the number between **1 and 500** by simply typing numbers in this channel.
-' +
-          'Wrong guesses are ignored. First correct guess wins!'
+          'A new guessing game has begun!' +
+          'Guess the number between **1 and 500** by simply typing numbers in this channel.' + 'Wrong guesses are ignored. First correct guess wins!'
         )
         .setTimestamp();
 
@@ -116,3 +113,4 @@ module.exports = {
     return message.channel.send({ embeds: [helpEmbed] });
   },
 };
+
