@@ -10,7 +10,7 @@ const rarities = [
   { name: 'Mythical',  chance: 0.001 },
   { name: 'Legendary', chance: 0.01  },
   { name: 'Rare',      chance: 0.03  },
-  { name: 'Uncommon',  chance: 0.50  },
+  { name: 'Uncommon',  chance: 0.05  },
   { name: 'Common',    chance: 0.10  },
 ];
 
@@ -47,7 +47,7 @@ async function handleKeyDrop(message, client) {
   }
 
   // 5% chance per message to spawn a new key if none active
-  if (!currentKey && Math.random() <= 0.04) {
+  if (!currentKey && Math.random() <= 0.01) {
     const rarity = getRandomRarity();
     currentKey = {
       rarity, // string like "Legendary"
