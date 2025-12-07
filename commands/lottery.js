@@ -37,12 +37,13 @@ module.exports = {
       lotteryState.pot += LOTTERY_PRICE;
       lotteryState.tickets.push(userId);
 
-      // Persist to MongoDB
-      await saveUserData({ balance: userData.balance });
+      // Persist to MongoDB (with userId)
+      await saveUserData(message.author.id, { balance: userData.balance });
 
       const boughtEmbed = new EmbedBuilder()
         .setTitle("🎟️ Lottery Ticket Bought!")
-        .setDescription(`You bought a ticket for **${LOTTERY_PRICE}**!\nYou now have **${currentTickets + 1}/5** tickets.`)
+        .setDescription(`You bought a ticket for **${LOTTERY_PRICE}**!
+You now have **${currentTickets + 1}/5** tickets.`)
         .addFields(
           { name: 'Total Pot', value: lotteryState.pot.toString(), inline: true },
           { name: 'Total Tickets', value: lotteryState.tickets.length.toString(), inline: true }
@@ -85,7 +86,7 @@ module.exports = {
       if (winnerId === userId) {
         // Winner is the current user
         userData.balance += lotteryState.pot;
-        await saveUserData({ balance: userData.balance });
+        await saveUserData(message.author.id, { balance: userData.balance });
       } else {
         // Winner is someone else - use updateUserBalance to update them
         await updateUserBalance(winnerId, lotteryState.pot);
@@ -106,7 +107,7 @@ module.exports = {
 
     // Default error/help
     return message.channel.send(
-      `Usage: \`.lottery buy\` to buy ticket (${LOTTERY_PRICE}, max 5 per user), \`.lottery status\` to check, \`.lottery draw\` (authorized users only)`
+      `Usage: `.lottery buy` to buy ticket (${LOTTERY_PRICE}, max 5 per user), `.lottery status` to check, `.lottery draw` (authorized users only)`
     );
   }
 };
