@@ -1,27 +1,29 @@
 const { EmbedBuilder } = require('discord.js');
 
+const shopItems = [
+  { id: 'lucky_coin', name: 'Lucky Coin', price: 100, emoji: '🪙', description: 'A shiny coin for luck' },
+  { id: 'mystery_box', name: 'Mystery Box', price: 250, emoji: '📦', description: 'Contains unknown treasure' },
+  { id: 'golden_key', name: 'Golden Key', price: 500, emoji: '🔑', description: 'Opens special doors' },
+  { id: 'diamond', name: 'Diamond', price: 1000, emoji: '💎', description: 'Valuable gem' },
+  { id: 'crown', name: 'Crown', price: 2000, emoji: '👑', description: 'Symbol of power' },
+];
+
 module.exports = {
   name: 'shop',
-  description: 'Display the shop items.',
+  description: 'View the shop and available items to buy',
   async execute({ message }) {
-    // Example shop items; adapt as needed
-    const shopItems = [
-      { name: 'Common Key', price: 50, description: 'A basic key for chests' },
-      { name: 'Rare Key', price: 200, description: 'A key with better loot chances' },
-      { name: 'Legendary Key', price: 500, description: 'High-tier key, very rare rewards' },
-      { name: 'Mythical Sword', price: 1000, description: 'A powerful sword with special effects' },
-    ];
-
     const embed = new EmbedBuilder()
-      .setTitle('🛒 Shop')
-      .setColor('#00BFFF')
-      .setDescription('Browse the items you can buy with your currency.\nUse `.buy <item name> <amount>` to purchase.')
+      .setTitle('🏪 Shop')
+      .setDescription('Use `.buy <item_id>` to purchase an item')
+      .setColor('#FFD700')
       .setTimestamp();
 
     for (const item of shopItems) {
       embed.addFields({
-        name: `${item.name} - ${item.price} 𝓚𝓪𝓷`,
-        value: item.description,
+        name: `${item.emoji} ${item.name}`,
+        value: `**Price:** ${item.price} coins
+${item.description}
+**ID:** `${item.id}``,
         inline: false,
       });
     }
