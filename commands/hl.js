@@ -9,7 +9,6 @@ module.exports = {
     if (!bet || isNaN(bet) || bet <= 0) 
       return message.channel.send('Usage: `.hl <amount>`');
 
-    // userData is already loaded from MongoDB by index.js
     if (typeof userData.balance !== 'number') userData.balance = 0;
 
     if (userData.balance < bet) 
@@ -17,7 +16,7 @@ module.exports = {
 
     // Deduct bet first
     userData.balance -= bet;
-    await saveUserData({ balance: userData.balance });
+    await saveUserData(message.author.id, { balance: userData.balance });
 
     // Start with a random number (1-99, so the next is always possible)
     let current = Math.floor(Math.random() * 99) + 1;
@@ -47,10 +46,13 @@ Streak: **0**
       let resultMsg;
       if (won) {
         userData.balance += payout;
-        await saveUserData({ balance: userData.balance });
-        resultMsg = `🎉 You survived ${streakCount} rounds!\nThe next number was **${finalNum}**.\n**You won ${payout}!**`;
+        await saveUserData(message.author.id, { balance: userData.balance });
+        resultMsg = `🎉 You survived ${streakCount} rounds!
+The next number was **${finalNum}**.
+**You won ${payout}!**`;
       } else {
-        resultMsg = `❌ You lost! The next number was **${finalNum}**.\nStreak: ${streakCount}. You lost your bet.`;
+        resultMsg = `❌ You lost! The next number was **${finalNum}**.
+Streak: ${streakCount}. You lost your bet.`;
       }
       const endEmbed = new EmbedBuilder()
         .setTitle('🔼 Higher or Lower 🔽 Result')
@@ -75,7 +77,7 @@ Streak: **0**
         current = nextNum;
         if (streak >= maxRounds) {
           collector.stop('win');
-          const payout = bet * (2 ** streak); // Double reward each streak, e.g. 4x, 8x, 16x, 32x on round 5
+          const payout = bet * (2 ** streak);
           return endGame(true, payout, streak, nextNum);
         } else {
           const streakEmbed = new EmbedBuilder()
