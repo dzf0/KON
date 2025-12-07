@@ -1,75 +1,79 @@
 const { EmbedBuilder } = require('discord.js');
 
 const shopItems = [
-  { name: 'Common Key', price: 50 },
-  { name: 'Rare Key', price: 200 },
-  { name: 'Legendary Key', price: 500 },
-  { name: 'Mythical Sword', price: 1000 },
+  { id: 'silver_coin', name: 'silver_coin', price: 10000, emoji: '🪙', description: 'A shiny coin for exchanging robux and more!' },
+  { id: 'invites', name: 'invites', price: 30000, emoji: '🎁', description: 'can be used to claim rewards in #invites' },
+  { id: 'common_key', name: 'common_key', price: 500, emoji: '🔑', description: 'gives kan' },
+  { id: 'rare_key', name: 'rare_key', price: 1500, emoji: '🗝️', description: 'gives currency' },
+  { id: 'legendary_key', name: 'legendary_key', price: 2500, emoji: '🗝️', description: 'gives currency' },
 ];
 
 module.exports = {
   name: 'buy',
-  description: 'Buy items from the shop.',
+  description: 'Buy an item from the shop',
   async execute({ message, args, userData, saveUserData }) {
-    const itemName = args[0]?.toLowerCase();
-    const quantity = parseInt(args[1]) || 1;
+    const itemId = args[0]?.toLowerCase();
+    let quantity = parseInt(args[1]) || 1;
 
-    if (!itemName) {
-      const embed = new EmbedBuilder()
-        .setColor('#FFAA00')
-        .setTitle('Invalid Usage')
-        .setDescription('Please specify an item to buy. Usage: `.buy <item> [quantity]`');
-      return message.channel.send({ embeds: [embed] });
+    if (!itemId) {
+      return message.channel.send('Usage: `.buy <item_id> [quantity]`
+Example: `.buy common_key 2`
+Use `.shop` to see all items.');
     }
 
-    if (quantity <= 0 || isNaN(quantity)) {
-      const embed = new EmbedBuilder()
-        .setColor('#FF0000')
-        .setTitle('Invalid Quantity')
-        .setDescription('Quantity must be a positive number.');
-      return message.channel.send({ embeds: [embed] });
+    if (quantity <= 0) {
+      return message.channel.send('❌ Quantity must be at least 1.');
     }
 
-    const item = shopItems.find(i => i.name.toLowerCase() === itemName);
+    // Find the item by ID
+    const item = shopItems.find(i => i.id === itemId);
+
     if (!item) {
-      const embed = new EmbedBuilder()
-        .setColor('#FF0000')
-        .setTitle('Item Not Found')
-        .setDescription(`The item "${args[0]}" does not exist in the shop.`);
-      return message.channel.send({ embeds: [embed] });
+      return message.channel.send(
+        `❌ Item **${itemId}** not found in shop.
+Use `.shop` to see available items.`
+      );
     }
 
-    const totalCost = item.price * quantity;
+    // Calculate total price
+    const totalPrice = item.price * quantity;
 
-    // userData is already loaded from MongoDB by index.js
+    // Check balance
     if (typeof userData.balance !== 'number') userData.balance = 0;
 
-    if (userData.balance < totalCost) {
-      const embed = new EmbedBuilder()
-        .setColor('#FF0000')
-        .setTitle('Insufficient Funds')
-        .setDescription(`You do not have enough currency to buy ${quantity} ${item.name}(s).`);
-      return message.channel.send({ embeds: [embed] });
+    if (userData.balance < totalPrice) {
+      const needed = totalPrice - userData.balance;
+      return message.channel.send(
+        `❌ Insufficient balance! You need **${needed}** more coins.
+Your balance: **${userData.balance}** coins`
+      );
     }
 
-    // Deduct cost
-    userData.balance -= totalCost;
+    // Deduct price
+    userData.balance -= totalPrice;
 
-    // Add items to inventory
+    // Add to inventory
     userData.inventory = userData.inventory || {};
     userData.inventory[item.name] = (userData.inventory[item.name] || 0) + quantity;
 
-    // Persist to MongoDB
-    await saveUserData({
+    // Save to MongoDB
+    await saveUserData(message.author.id, {
       balance: userData.balance,
-      inventory: userData.inventory
+      inventory: userData.inventory,
     });
 
     const embed = new EmbedBuilder()
+      .setTitle('✅ Purchase Complete')
+      .setDescription(`You bought **${quantity}x ${item.emoji} ${item.name}**`)
+      .addFields(
+        { name: 'Price per Item', value: `${item.price} coins`, inline: true },
+        { name: 'Total Price', value: `${totalPrice} coins`, inline: true },
+        { name: 'Quantity', value: `${quantity}x`, inline: true },
+        { name: 'New Balance', value: `${userData.balance} coins`, inline: false },
+        { name: 'Total Owned', value: `${userData.inventory[item.name]}x`, inline: false }
+      )
       .setColor('#00FF00')
-      .setTitle('Purchase Successful')
-      .setDescription(`You bought ${quantity} ${item.name}(s) for ${totalCost} currency.`)
-      .addFields({ name: 'New Balance', value: userData.balance.toString(), inline: true });
+      .setTimestamp();
 
     message.channel.send({ embeds: [embed] });
   },
