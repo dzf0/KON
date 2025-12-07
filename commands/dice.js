@@ -24,7 +24,6 @@ module.exports = {
     let result = '';
 
     if (roll === 6) {
-      // High roll, but not crazy reward
       reward = Math.floor(bet * 3);
       userData.balance += reward;
       result = `🎲 You rolled **6**! You win **${reward}** (3x your bet)!`;
@@ -36,8 +35,8 @@ module.exports = {
       result = `🎲 You rolled **${roll}**. Unlucky, you lose your bet.`;
     }
 
-    // Persist to MongoDB (only changed fields)
-    await saveUserData({ balance: userData.balance });
+    // Persist to MongoDB (with userId)
+    await saveUserData(message.author.id, { balance: userData.balance });
 
     const embed = new EmbedBuilder()
       .setTitle('Dice Roll')
