@@ -1,11 +1,10 @@
 const { EmbedBuilder } = require('discord.js');
 
 const shopItems = [
-  { id: 'silver_coin', name: 'silver_coin', price: 10000, emoji: '🪙', description: 'A shiny coin for luck' },
-  { id: 'invites', name: 'invites', price: 30000, emoji: '🎁', description: 'Contains unknown treasure' },
-  { id: 'common_key', name: 'common_key', price: 500, emoji: '🔑', description: 'Opens special doors' },
-  { id: 'rare_key', name: 'rare_key', price: 1500, emoji: '🗝️', description: 'Valuable gem' },
-  { id: 'legendary_key', name: 'legendary_key', price: 2500, emoji: '🗝️', description: 'Symbol of power' },
+  { id: 'silv token', name: 'silv token', price: 10000, emoji: '🪙', description: 'Used to buy robux and more' },
+  { id: 'common key', name: 'common key', price: 100, emoji: '🔑', description: 'Opens common rewards' },
+  { id: 'rare key', name: 'rare key', price: 500, emoji: '🗝️', description: 'Opens rare rewards' },
+  { id: 'legendary key', name: 'legendary key', price: 900, emoji: '🗝️', description: 'Opens legendary rewards' },
 ];
 
 module.exports = {
@@ -14,7 +13,7 @@ module.exports = {
   async execute({ message }) {
     const embed = new EmbedBuilder()
       .setTitle('🏪 Shop')
-      .setDescription('Use `.buy <item_id>` to purchase an item')
+      .setDescription('Use `!buy <item_id> [quantity]` to purchase an item')
       .setColor('#FFD700')
       .setTimestamp();
 
