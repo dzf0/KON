@@ -1,25 +1,18 @@
 const { EmbedBuilder } = require('discord.js');
 
 const shopItems = [
-  { id: 'silv_token',   name: 'silv token',    price: 10000, emoji: '🔘',   description: 'A shiny coin for exchanging robux and more!' },
-  { id: 'common_key',    name: 'common key',        price: 100,   emoji: '🔑',   description: 'gives kan' },
-  { id: 'rare_key',      name: 'rare key',          price: 500,   emoji: '🗝',   description: 'gives currency' },
-  { id: 'legendary_key', name: 'legendary key',     price: 900,   emoji: '🔑',   description: 'gives currency' },
+  { id: 'silv_token', name: 'silv_token', price: 10000, emoji: '🔘', description: 'A shiny coin for exchanging robux and more!' },
+  { id: 'common_key', name: 'Common', price: 100, emoji: '🔑', description: 'gives kan' },
+  { id: 'rare_key', name: 'Rare', price: 500, emoji: '🗝', description: 'gives currency' },
+  { id: 'legendary_key', name: 'Legendary', price: 900, emoji: '🔑', description: 'gives currency' },
 ];
 
 module.exports = {
   name: 'buy',
   description: 'Buy an item from the shop',
-  async execute({ message, args, userData, saveUserData }) {
+  async execute({ message, args, getUserData }) {
     const userId = message.author.id;
-
-    // ensure user object exists
-    if (!userData[userId] || typeof userData[userId] !== 'object') {
-      userData[userId] = { balance: 0, inventory: {} };
-    }
-    if (!userData[userId].inventory || typeof userData[userId].inventory !== 'object') {
-      userData[userId].inventory = {};
-    }
+    const userData = await getUserData(userId);
 
     const itemId = args[0]?.toLowerCase();
     let quantity = parseInt(args[1]) || 1;
@@ -44,26 +37,26 @@ module.exports = {
     }
 
     const totalPrice = item.price * quantity;
+    const currentBalance = userData.balance || 0;
 
-    if (typeof userData[userId].balance !== 'number') userData[userId].balance = 0;
-
-    if (userData[userId].balance < totalPrice) {
-      const needed = totalPrice - userData[userId].balance;
+    if (currentBalance < totalPrice) {
+      const needed = totalPrice - currentBalance;
       return message.channel.send(
         `❌ Insufficient balance! You need **${needed}** more coins.\n` +
-        `Your balance: **${userData[userId].balance}** coins`
+        `Your balance: **${currentBalance}** coins\n` +
+        `Item price: **${totalPrice}** coins`
       );
     }
 
-    // deduct price
-    userData[userId].balance -= totalPrice;
+    // Deduct price
+    userData.balance -= totalPrice;
 
-    // add to inventory; for keys, we store by rarity name used elsewhere
-    userData[userId].inventory[item.name] =
-      (userData[userId].inventory[item.name] || 0) + quantity;
+    // Add to inventory (MongoDB uses Map)
+    const currentAmount = userData.inventory.get(item.name) || 0;
+    userData.inventory.set(item.name, currentAmount + quantity);
 
-    // save to data.json (your saveUserData in main file takes no args)
-    saveUserData();
+    // Save to MongoDB
+    await userData.save();
 
     const embed = new EmbedBuilder()
       .setTitle('✅ Purchase Complete')
@@ -72,8 +65,8 @@ module.exports = {
         { name: 'Price per Item', value: `${item.price} coins`, inline: true },
         { name: 'Total Price', value: `${totalPrice} coins`, inline: true },
         { name: 'Quantity', value: `${quantity}x`, inline: true },
-        { name: 'New Balance', value: `${userData[userId].balance} coins`, inline: false },
-        { name: 'Total Owned', value: `${userData[userId].inventory[item.name]}x`, inline: false }
+        { name: 'New Balance', value: `${userData.balance} coins`, inline: false },
+        { name: 'Total Owned', value: `${userData.inventory.get(item.name)}x`, inline: false }
       )
       .setColor('#00FF00')
       .setTimestamp();
