@@ -1,10 +1,10 @@
 const { EmbedBuilder } = require('discord.js');
 
 const shopItems = [
-  { id: 'silv_token', name: 'silv_token', price: 10000, emoji: '🔘', description: 'A shiny coin for exchanging robux and more!' },
-  { id: 'common_key', name: 'Common', price: 100, emoji: '🔑', description: 'gives kan' },
-  { id: 'rare_key', name: 'Rare', price: 500, emoji: '🗝', description: 'gives currency' },
-  { id: 'legendary_key', name: 'Legendary', price: 900, emoji: '🔑', description: 'gives currency' },
+  { id: 'silv_token', name: 'Silv token', price: 10000, emoji: '🔘', description: 'A shiny coin for exchanging robux and more!' },
+  { id: 'common_key', name: 'Common key', price: 100, emoji: '🔑', description: 'gives kan' },
+  { id: 'rare_key', name: 'Rare key', price: 500, emoji: '🗝', description: 'gives currency' },
+  { id: 'legendary_key', name: 'Legendary key', price: 900, emoji: '🔑', description: 'gives currency' },
 ];
 
 module.exports = {
@@ -13,7 +13,7 @@ module.exports = {
   async execute({ message }) {
     const embed = new EmbedBuilder()
       .setTitle('🏪 Shop')
-      .setDescription('Use `!buy <item_id> [quantity]` to purchase an item')
+      .setDescription('Use `.buy <item_id> [quantity]` to purchase an item')
       .setColor('#FFD700')
       .setTimestamp();
 
