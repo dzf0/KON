@@ -23,25 +23,22 @@ module.exports = {
     let reward = 0;
     let result = '';
 
-    // Nerfed payouts: 1-2 lose, 3-6 win with lower multipliers
+    // 50% win (4–6), 50% lose (1–3)
+    // profits are small so game stays healthy
     if (roll === 6) {
-      reward = Math.floor(bet * 2.2);
+      reward = Math.floor(bet * 2);       // +1x profit
       userData.balance += reward;
-      result = `🎲 You rolled **6**! You win **${reward}** (2.2x your bet)!`;
+      result = `🎲 You rolled **6**! You win **${reward}** (2x your bet)!`;
     } else if (roll === 5) {
-      reward = Math.floor(bet * 1.8);
+      reward = Math.floor(bet * 1.7);     // +0.7x profit
       userData.balance += reward;
-      result = `🎲 You rolled **5**! You win **${reward}** (1.8x your bet)!`;
+      result = `🎲 You rolled **5**! You win **${reward}** (1.7x your bet)!`;
     } else if (roll === 4) {
-      reward = Math.floor(bet * 1.4);
+      reward = Math.floor(bet * 1.4);     // +0.4x profit
       userData.balance += reward;
       result = `🎲 You rolled **4**! You win **${reward}** (1.4x your bet)!`;
-    } else if (roll === 3) {
-      reward = bet;
-      userData.balance += reward;
-      result = `🎲 You rolled **3**! You win **${reward}** (1x your bet)!`;
     } else {
-      // roll === 1 or 2: lose bet
+      // 1–3: lose bet
       result = `🎲 You rolled **${roll}**. Unlucky, you lose your bet.`;
     }
 
