@@ -4,7 +4,7 @@ const shopItems = [
   { id: 'silv_token', name: 'Silv token', price: 10000, emoji: '🔘', description: 'A shiny coin for exchanging robux and more!' },
   { id: 'common', name: 'Common key', price: 100, emoji: '🔑', description: 'gives kan' },
   { id: 'rare', name: 'Rare key', price: 500, emoji: '🗝', description: 'gives currency' },
-  { id: 'regendary', name: 'Legendary key', price: 900, emoji: '🔑', description: 'gives currency' },
+  { id: 'legendary', name: 'Legendary key', price: 900, emoji: '🔑', description: 'gives currency' },
 ];
 
 module.exports = {
