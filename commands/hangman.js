@@ -56,10 +56,14 @@ module.exports = {
         adminId: message.author.id
       });
 
+      const lettersCount = word.replace(/\s/g, '').length;
+
       const startEmbed = new EmbedBuilder()
         .setTitle('🎮 Hangman Game Started!')
         .setDescription(
-          `A new hangman game has been started by an admin!\n\n${getWordDisplay(GAME_CHANNEL_ID)}`
+          `A new hangman game has been started by an admin!\n\n` +
+          `${getWordDisplay(GAME_CHANNEL_ID)}\n\n` +
+          `This word has **${lettersCount}** letter(s) (spaces not counted).`
         )
         .addFields({ name: 'Wrong Guesses', value: '0/6', inline: true })
         .setColor('#00FF00')
@@ -96,17 +100,18 @@ module.exports = {
 
         if (!display.includes('_')) {
           // Word solved - award reward
-          const reward = 300;
+          const reward = 1000; // changed from 300 to 1000
           userData.balance = (userData.balance || 0) + reward;
-          // One-argument saveUserData; index.js wrapper adds userId
           await saveUserData({ balance: userData.balance });
+
+          const lettersCount = game.word.replace(/\s/g, '').length;
 
           const winEmbed = new EmbedBuilder()
             .setTitle('🎉 Game Won!')
             .setDescription(
               `${message.author} guessed the word!\n\n` +
-              `**Word:** ${game.word.toUpperCase()}\n\n` +
-              `${message.author} earned **${reward}** coins!`
+              `**Word:** ${game.word.toUpperCase()} ( **${lettersCount}** letters )\n\n` +
+              `${message.author} earned **${reward}** kan!`
             )
             .setColor('#00FF00')
             .setTimestamp();
@@ -116,10 +121,14 @@ module.exports = {
           return;
         }
 
+        const lettersCount = game.word.replace(/\s/g, '').length;
+
         const correctEmbed = new EmbedBuilder()
           .setTitle('✅ Correct Letter!')
           .setDescription(
-            `**${guess.toUpperCase()}** is in the word!\n\n${display}`
+            `**${guess.toUpperCase()}** is in the word!\n\n` +
+            `${display}\n\n` +
+            `This word has **${lettersCount}** letter(s) (spaces not counted).`
           )
           .addFields(
             { name: 'Wrong Guesses', value: `${game.wrongGuesses}/${game.maxWrongs}`, inline: true },
@@ -147,12 +156,15 @@ module.exports = {
           return;
         }
 
+        const lettersCount = game.word.replace(/\s/g, '').length;
+
         const wrongEmbed = new EmbedBuilder()
           .setTitle('❌ Wrong Letter!')
           .setDescription(
             `${hangmanStages[game.wrongGuesses]}\n\n` +
             `**${guess.toUpperCase()}** is not in the word.\n\n` +
-            `${getWordDisplay(GAME_CHANNEL_ID)}`
+            `${getWordDisplay(GAME_CHANNEL_ID)}\n\n` +
+            `This word has **${lettersCount}** letter(s) (spaces not counted).`
           )
           .addFields(
             { name: 'Wrong Guesses', value: `${game.wrongGuesses}/${game.maxWrongs}`, inline: true },
