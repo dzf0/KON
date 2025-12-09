@@ -21,15 +21,20 @@ module.exports = {
     // Start with a random number (1-99, so the next is always possible)
     let current = Math.floor(Math.random() * 99) + 1;
     let streak = 0;
-    let maxRounds = 5;
 
-    // Ask for the first guess
+    // NERF: fewer rounds and softer multipliers
+    const maxRounds = 3;
+    const multipliers = [0, 1.5, 2.2, 3]; 
+    // index = streak; streak 1→1.5x, 2→2.2x, 3→3x
+
     let embed = new EmbedBuilder()
       .setTitle('🔼 Higher or Lower 🔽')
-      .setDescription(`Current number: **${current}**
-React 🔼 for Higher, 🔽 for Lower.
-Streak: **0**
-(Payout grows for each correct guess, up to 5 rounds!)`)
+      .setDescription(
+        `Current number: **${current}**\n` +
+        `React 🔼 for Higher, 🔽 for Lower.\n` +
+        `Streak: **0**\n` +
+        `Payout caps at **${multipliers[maxRounds]}x** after ${maxRounds} correct guesses.`
+      )
       .setColor('#3333aa')
       .setTimestamp();
 
@@ -47,12 +52,14 @@ Streak: **0**
       if (won) {
         userData.balance += payout;
         await saveUserData({ balance: userData.balance });
-        resultMsg = `🎉 You survived ${streakCount} rounds!
-The next number was **${finalNum}**.
-**You won ${payout}!**`;
+        resultMsg =
+          `🎉 You survived ${streakCount} round(s)!\n` +
+          `The next number was **${finalNum}**.\n` +
+          `**You won ${payout}!**`;
       } else {
-        resultMsg = `❌ You lost! The next number was **${finalNum}**.
-Streak: ${streakCount}. You lost your bet.`;
+        resultMsg =
+          `❌ You lost! The next number was **${finalNum}**.\n` +
+          `Streak: ${streakCount}. You lost your bet.`;
       }
       const endEmbed = new EmbedBuilder()
         .setTitle('🔼 Higher or Lower 🔽 Result')
@@ -67,27 +74,31 @@ Streak: ${streakCount}. You lost your bet.`;
       await reaction.users.remove(user.id).catch(() => {});
       collector.resetTimer();
 
-      // Generate new number (1-100)
       const nextNum = Math.floor(Math.random() * 100) + 1;
-
       const picked = reaction.emoji.name === '🔼' ? 'higher' : 'lower';
 
-      if (
+      const correct =
         (picked === 'higher' && nextNum > current) ||
-        (picked === 'lower' && nextNum < current)
-      ) {
+        (picked === 'lower' && nextNum < current);
+
+      if (correct) {
         streak += 1;
         current = nextNum;
+
+        // If reached max streak, cash out with nerfed multiplier
         if (streak >= maxRounds) {
           collector.stop('win');
-          const payout = bet * (2 ** streak);
+          const payout = Math.floor(bet * multipliers[streak]);
           return endGame(true, payout, streak, nextNum);
         } else {
           const streakEmbed = new EmbedBuilder()
             .setTitle('🔼 Higher or Lower 🔽')
-            .setDescription(`Correct! The new number is **${nextNum}**.
-React for next guess.
-Streak: **${streak}** (${streak < maxRounds ? 'Keep going!' : 'Max reached'})`)
+            .setDescription(
+              `Correct! The new number is **${nextNum}**.\n` +
+              `React for next guess.\n` +
+              `Streak: **${streak}** (up to ${maxRounds})\n` +
+              `Current potential: **${multipliers[streak]}x** your bet if you cash out on a lossless end.`
+            )
             .setColor('#00cc00')
             .setTimestamp();
           await statusMsg.edit({ embeds: [streakEmbed] });
