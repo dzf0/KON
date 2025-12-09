@@ -46,8 +46,8 @@ async function handleKeyDrop(message, client) {
     }
   }
 
-  // 2.5% chance per message to spawn a new key if none active
-  if (!currentKey && Math.random() <= 0.025) {
+  // 5% chance per message to spawn a new key if none active
+  if (!currentKey && Math.random() <= 0.05) {
     const rarity = getRandomRarity();
     currentKey = {
       rarity, // string like "Legendary"
@@ -91,18 +91,11 @@ async function spawnKey(rarity, channelId, client) {
 }
 
 async function claimKey(userId, addKeyToInventory) {
-  // SAFETY: if no key or already claimed, do nothing and let caller handle it
-  if (!currentKey || currentKey.claimed) {
-    return false;
-  }
+  if (!currentKey || currentKey.claimed) return false;
 
-  // Give key to user
   await addKeyToInventory(userId, currentKey.rarity, 1);
-
-  // Mark claimed then clear
   currentKey.claimed = true;
   currentKey = null;
-
   return true;
 }
 
