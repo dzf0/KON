@@ -49,10 +49,10 @@ async function handleKeyDrop(message, client) {
 
   // 5% chance per message to spawn a new key if none active
   if (!currentKey && Math.random() <= 0.05) {
-    const rarityName = getRandomRarity();   // plain string
+    const rarityName = getRandomRarity(); // plain string
 
     currentKey = {
-      rarity: rarityName,               // store the string
+      rarity: rarityName,
       channelId: message.channel.id,
       claimed: false,
       spawnedBy: 'auto',
@@ -68,7 +68,7 @@ async function handleKeyDrop(message, client) {
   }
 }
 
-// USED BY admin.js: keydrop.spawnKey(rarityKey, channelId, message.client)
+// Used by admin.js: keydrop.spawnKey(rarityKey, channelId, message.client)
 async function spawnKey(rarity, channelId, client) {
   // rarity is a STRING like "Legendary"
   if (currentKey && !currentKey.claimed) {
@@ -94,7 +94,7 @@ async function spawnKey(rarity, channelId, client) {
   return { success: true, message: `Spawned **${rarity}** key in <#${channelId}>` };
 }
 
-// USED BY claim.js: keydrop.claimKey(message.author.id, addKeyToInventory, client)
+// Used by claim.js: keydrop.claimKey(message.author.id, addKeyToInventory, client)
 async function claimKey(userId, addKeyToInventory, client) {
   if (!currentKey || currentKey.claimed) return false;
 
