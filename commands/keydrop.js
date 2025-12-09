@@ -90,11 +90,28 @@ async function spawnKey(rarity, channelId, client) {
   return { success: true, message: `Spawned **${rarity}** key in <#${channelId}>` };
 }
 
-async function claimKey(userId, addKeyToInventory) {
-  if (!currentKey || currentKey.claimed) return false;
+// UPDATED: announce claimer in channel, but only once
+async function claimKey(userId, addKeyToInventory, client) {
+  if (!currentKey || currentKey.claimed) {
+    // already claimed or no key – let .claim command handle private 5s message
+    return false;
+  }
 
   await addKeyToInventory(userId, currentKey.rarity, 1);
   currentKey.claimed = true;
+
+  // Public announcement of who claimed it
+  const channel = client.channels.cache.get(currentKey.channelId);
+  if (channel) {
+    const claimEmbed = new EmbedBuilder()
+      .setTitle('🔑 Key Claimed!')
+      .setDescription(`<@${userId}> claimed the **${currentKey.rarity}** key!`)
+      .setColor('Gold')
+      .setTimestamp();
+
+    await channel.send({ embeds: [claimEmbed] });
+  }
+
   currentKey = null;
   return true;
 }
