@@ -1,59 +1,50 @@
+// commands/claim.js
 const { EmbedBuilder } = require('discord.js');
-const keydrop = require('./keydrop.js');
 
 module.exports = {
   name: 'claim',
-  description: 'Claim the currently dropped key.',
-  async execute({ message, addKeyToInventory }) {
-    const currentKey = keydrop.getCurrentKey(); // may be null
+  description: 'Claim the currently dropped key',
+  /**
+   * @param {Object} ctx
+   * @param {import('discord.js').Message} ctx.message
+   * @param {Function} ctx.addKeyToInventory
+   * @param {Object} ctx.keydrop
+   * @param {import('discord.js').Client} ctx.client
+   */
+  async execute({ message, addKeyToInventory, keydrop, client }) {
+    const userId = message.author.id;
 
-    // No key / already claimed / wrong channel
-    if (!currentKey || currentKey.claimed || currentKey.channelId !== message.channel.id) {
-      const reply = await message.reply({
-        embeds: [
-          new EmbedBuilder()
-            .setTitle('No Active Key')
-            .setDescription('There is no key available to claim right now, or it has already been claimed.')
-            .setColor('Red')
-            .setTimestamp(),
-        ],
-      });
+    // Try to claim using keydrop.js logic
+    const success = await keydrop.claimKey(userId, addKeyToInventory, client);
 
+    // If claimKey returned false, either there is no key or it was already claimed
+    if (!success) {
+      const replyEmbed = new EmbedBuilder()
+        .setColor('Red')
+        .setTitle('Cannot Claim Key')
+        .setDescription('There is no claimable key right now, or it has already been claimed.');
+
+      const replyMsg = await message.reply({ embeds: [replyEmbed] });
+
+      // Delete this reply after 5 seconds so only the claimer briefly sees it
       setTimeout(() => {
-        reply.delete().catch(() => {});
+        replyMsg.delete().catch(() => {});
       }, 5000);
 
       return;
     }
 
-    // Try to claim via keydrop (this also adds to MongoDB)
-    const success = await keydrop.claimKey(message.author.id, addKeyToInventory);
+    // Optional personal success message (public announce is done in keydrop.js)
+    const successEmbed = new EmbedBuilder()
+      .setColor('Green')
+      .setTitle('Key Claimed')
+      .setDescription('You successfully claimed the key! It has been added to your inventory.');
 
-    if (success) {
-      const embed = new EmbedBuilder()
-        .setTitle('🔑 Key Claimed!')
-        .setDescription(
-          `${message.author} claimed a **${currentKey.rarity}** key! Check your inventory with `.inventory`.`
-        )
-        .setColor('Green')
-        .setTimestamp();
+    const successMsg = await message.reply({ embeds: [successEmbed] });
 
-      await message.channel.send({ embeds: [embed] });
-    } else {
-      // Race condition: someone else got it
-      const reply = await message.reply({
-        embeds: [
-          new EmbedBuilder()
-            .setTitle('Too Late!')
-            .setDescription('That key has already been claimed.')
-            .setColor('Red')
-            .setTimestamp(),
-        ],
-      });
-
-      setTimeout(() => {
-        reply.delete().catch(() => {});
-      }, 5000);
-    }
+    // Also delete personal success message after 5 seconds
+    setTimeout(() => {
+      successMsg.delete().catch(() => {});
+    }, 5000);
   },
 };
