@@ -3,25 +3,25 @@ const { EmbedBuilder } = require('discord.js');
 // Character image URLs - using direct links
 const characterImages = {
   // ONE PIECE
-  'Luffy': 'https://i.pinimg.com/originals/b8/1e/f4/b81ef4c8f8e2f5a9e0c5d6f9d0e5c9d0.jpg',
-  'Zoro': 'https://i.pinimg.com/originals/8f/3e/2c/8f3e2c6f5d4e3c2b1a0f9e8d7c6b5a4.jpg',
-  'Shanks': 'https://i.pinimg.com/originals/a1/2b/3c/a12b3c4d5e6f7a8b9c0d1e2f3a4b5c6.jpg',
-  'Whitebeard': 'https://i.pinimg.com/originals/d4/5e/6f/d45e6f7a8b9c0d1e2f3a4b5c6d7e8f9.jpg',
-  'Ace': 'https://i.pinimg.com/originals/7a/8b/9c/7a8b9c0d1e2f3a4b5c6d7e8f9a0b1c2.jpg',
+  'Luffy': 'https://cdn.discordapp.com/attachments/1405349401945178152/1449307156473184447/latest.png?ex=693e6bf8&is=693d1a78&hm=5858b571e62fc01b99e8dc7104467bface6820a9bfacfa0b50ef99f1d4fe59da&',
+  'Zoro': 'https://cdn.discordapp.com/attachments/1405349401945178152/1449307404595630143/latest.png?ex=693e6c34&is=693d1ab4&hm=658dabbeea021de7a5ff6fcf6a8ebe7a8424151dd25ee2015183c38566091fec&',
+  'Shanks': 'https://cdn.discordapp.com/attachments/1405349401945178152/1449307603028017232/latest.png?ex=693e6c63&is=693d1ae3&hm=cea9f7a7133601b93a3233c0a9155a2218453430d8b48241924102593100f265&',
+  'Whitebeard': 'https://cdn.discordapp.com/attachments/1405349401945178152/1449307809559744586/latest.png?ex=693e6c94&is=693d1b14&hm=c06b9c66272041d0151dbf856eed21e1d5fb046636d7a3b658423d0dce0659dd&',
+  'Ace': 'https://cdn.discordapp.com/attachments/1405349401945178152/1449308054465019945/latest.png?ex=693e6ccf&is=693d1b4f&hm=3cf7073d743397afd3cba8045d340e64dca91cf43a87b29d5afb7667bea87b74&',
 
   // NARUTO
-  'Itachi': 'https://i.pinimg.com/originals/5c/6d/7e/5c6d7e8f9a0b1c2d3e4f5a6b7c8d9e0.jpg',
-  'Sasuke': 'https://i.pinimg.com/originals/9e/0f/1a/9e0f1a2b3c4d5e6f7a8b9c0d1e2f3a4.jpg',
-  'Naruto': 'https://i.pinimg.com/originals/2f/3a/4b/2f3a4b5c6d7e8f9a0b1c2d3e4f5a6b7.jpg',
+  'Itachi': 'https://cdn.discordapp.com/attachments/1405349401945178152/1449308389556621363/latest.png?ex=693e6d1e&is=693d1b9e&hm=4291de6bc107c1ac3a0da5d246d3cf1bd0ae4a177902e3378a8a7c733da82519&',
+  'Sasuke': 'https://cdn.discordapp.com/attachments/1405349401945178152/1449309554528751687/images.png?ex=693e6e34&is=693d1cb4&hm=73075ea6724c385976a4fdb6b07cad5ca5a254703b0b4106ff6b6d41aebecf39&',
+  'Naruto': 'https://cdn.discordapp.com/attachments/1405349401945178152/1449309964496666708/latest.png?ex=693e6e96&is=693d1d16&hm=13ac925fa87dac5616305e9a62aa64e40c7a133a9f54bcdb1ec220cf4c4ca174&',
 
   // DRAGON BALL
-  'Goku': 'https://i.pinimg.com/originals/6b/7c/8d/6b7c8d9e0f1a2b3c4d5e6f7a8b9c0d1.jpg',
-  'Vegeta': 'https://i.pinimg.com/originals/0d/1e/2f/0d1e2f3a4b5c6d7e8f9a0b1c2d3e4f5.jpg',
+  'Goku': 'https://cdn.discordapp.com/attachments/1405349401945178152/1449310482845536276/2Q.png?ex=693e6f11&is=693d1d91&hm=9cd54122ef1874176470813dc4169db11616754355adb69f702f994bde3ca099&',
+  'Vegeta': 'https://cdn.discordapp.com/attachments/1405349401945178152/1449310651548958801/images.png?ex=693e6f3a&is=693d1dba&hm=192ecdc3223073ef04de9792f0ff0198091ae6fa192056d7295652564a732335&',
 
   // ATTACK ON TITAN
-  'Eren': 'https://i.pinimg.com/originals/4f/5a/6b/4f5a6b7c8d9e0f1a2b3c4d5e6f7a8b9.jpg',
-  'Levi': 'https://i.pinimg.com/originals/8b/9c/0d/8b9c0d1e2f3a4b5c6d7e8f9a0b1c2d3.jpg',
-  'Reiner': 'https://i.pinimg.com/originals/3e/4f/5a/3e4f5a6b7c8d9e0f1a2b3c4d5e6f7a8.jpg',
+  'Eren': 'https://cdn.discordapp.com/attachments/1405349401945178152/1449312098533380178/A1ddAIYVhZL.png?ex=693e7093&is=693d1f13&hm=4712386f847b997879a76952a8e4feec8a7a1c8cf26bd2845bfe0d22ea83b79d&',
+  'Levi': 'https://cdn.discordapp.com/attachments/1405349401945178152/1449311573389611073/latest.png?ex=693e7016&is=693d1e96&hm=94047b96773df956e0939f3558dc6105732959b5823253c7ab9e874a21783ee0&',
+  'Reiner': 'https://cdn.discordapp.com/attachments/1405349401945178152/1449311177115963473/d766a5134898651.png?ex=693e6fb7&is=693d1e37&hm=5270d0a9752cbcd0392b335f86ad98bd0d62f6fc0d46bf4ee45461a471b4b171&',
 
   // MY HERO ACADEMIA
   'Shoto Todoroki': 'https://cdn.discordapp.com/attachments/1405349401945178152/1449305840791326775/latest.png?ex=693e6abf&is=693d193f&hm=ba24686d52ee807db4bdaed717b54d9dfe55fd037ba8725923c4050cffe18929&',
@@ -30,16 +30,16 @@ const characterImages = {
   'Hanta Sero': 'https://cdn.discordapp.com/attachments/1405349401945178152/1449305050978451477/latest.png?ex=693e6a02&is=693d1882&hm=22510db28ae6b30df602403f10db1d66a3426aed809b74ed146abb0ca83c4b58&',
 
   // SOUL EATER
-  'Tsubaki Nakatsukasa': 'https://i.pinimg.com/originals/3c/4d/5e/3c4d5e6f7a8b9c0d1e2f3a4b5c6d7e8.jpg',
+  'Tsubaki Nakatsukasa': 'https://cdn.discordapp.com/attachments/1405349401945178152/1449312280033624105/Z.png?ex=693e70be&is=693d1f3e&hm=aae23a66c3c45fafa4c1ff516eaf27125edc8a18dc4268e6046c60193fd6008b&',
 
   // BUNGO STRAY DOGS
-  'Michizo Tachihara': 'https://i.pinimg.com/originals/7e/8f/9a/7e8f9a0b1c2d3e4f5a6b7c8d9e0f1a2.jpg',
+  'Michizo Tachihara': 'https://cdn.discordapp.com/attachments/1405349401945178152/1449312600130326650/latest.png?ex=693e710a&is=693d1f8a&hm=7aa380b7c27336171e82eac1b3d5e9d70709b52768e37f6ecea4f1998ad3b0ad&',
 
   // THE WALLFLOWER
-  'Sunako Nakahara': 'https://i.pinimg.com/originals/1a/2b/3c/1a2b3c4d5e6f7a8b9c0d1e2f3a4b5c6.jpg',
+  'Sunako Nakahara': 'https://cdn.discordapp.com/attachments/1405349401945178152/1449312936928612383/2373da5475588a7e99102b015fc45a34.png?ex=693e715b&is=693d1fdb&hm=3f31e5eefda48b8aa4e6a13b2649504c45d753d71dda4ea7cbc0e1d868720e2c&',
 
   // MAGI
-  'Morgiana': 'https://i.pinimg.com/originals/5c/6d/7e/5c6d7e8f9a0b1c2d3e4f5a6b7c8d9e0.jpg',
+  'Morgiana': 'https://cdn.discordapp.com/attachments/1405349401945178152/1449313111390818456/latest.png?ex=693e7184&is=693d2004&hm=4191375661318d01442c4707d5b847265834f166e4f81dd4868a86675e205de5&',
 };
 
 module.exports = {
