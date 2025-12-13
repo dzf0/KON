@@ -10,6 +10,16 @@ const rarityRates = [
   { name: 'D', chance: 0.35, color: '#808080' },   // 35%
 ];
 
+// Duplicate refund amounts by tier (percentage of roll cost)
+const duplicateRefunds = {
+  'S+': 1500,  // 75% refund
+  'S': 1200,   // 60% refund
+  'A': 1000,   // 50% refund
+  'B': 800,    // 40% refund
+  'C': 600,    // 30% refund
+  'D': 400,    // 20% refund
+};
+
 // All characters with their moves and tier
 const characters = {
   // ONE PIECE
@@ -281,7 +291,21 @@ module.exports = {
     const charName = availableChars[Math.floor(Math.random() * availableChars.length)];
     const char = characters[charName];
 
-    // Add to user collection
+    // Check if duplicate
+    const isDuplicate = userData.characters.some(c => c.name === charName);
+    let refundAmount = 0;
+    let statusText = '';
+
+    if (isDuplicate) {
+      // Give refund based on tier
+      refundAmount = duplicateRefunds[tier] || 400;
+      userData.balance += refundAmount;
+      statusText = `\n\n💰 **Duplicate!** Refunded **${refundAmount}** coins.`;
+    } else {
+      statusText = '\n\n✨ **New character unlocked!**';
+    }
+
+    // Add to user collection regardless (for duplicates can be used later)
     userData.characters.push({
       name: charName,
       series: char.series,
@@ -301,10 +325,10 @@ module.exports = {
     const tierColor = rarityRates.find(r => r.name === tier)?.color || '#808080';
 
     const embed = new EmbedBuilder()
-      .setTitle(`🎉 You rolled: ${charName}!`)
+      .setTitle(`${isDuplicate ? '🔄' : '🎉'} You rolled: ${charName}!`)
       .setDescription(
         `**Series:** ${char.series}\n` +
-        `**Tier:** ${char.tier}\n\n` +
+        `**Tier:** ${char.tier}${statusText}\n\n` +
         `**Moves:**\n${movesText}`
       )
       .setColor(tierColor)
