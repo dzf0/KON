@@ -17,7 +17,8 @@ const userSchema = new mongoose.Schema({
   userId: { type: String, unique: true, required: true },
   balance: { type: Number, default: 0 },
   inventory: { type: Object, default: {} },
-  lastDaily: { type: Date, default: null },  // Added for daily rewards
+  lastDaily: { type: Date, default: null },
+  characters: { type: Array, default: [] }, // Added for character gacha system
 });
 
 const User = mongoose.model('User', userSchema);
@@ -65,7 +66,7 @@ mongoose
 async function getUserData(userId) {
   let user = await User.findOne({ userId });
   if (!user) {
-    user = new User({ userId, balance: 0, inventory: {}, lastDaily: null });
+    user = new User({ userId, balance: 0, inventory: {}, lastDaily: null, characters: [] });
     await user.save();
   }
   return user.toObject();
@@ -204,7 +205,7 @@ client.on('messageCreate', async (message) => {
 
   // ===== RESTRICT KEY CHANNEL =====
   const KEYS_CHANNEL_ID = '1401925188991582338'; // your keydrop channel ID
-  const allowedInKeysChannel = ['redeem','hangman','inventory','bal','baltop'];        // only .claim allowed
+  const allowedInKeysChannel = ['redeem', 'hangman', 'inventory', 'bal', 'baltop'];
 
   if (
     message.channel.id === KEYS_CHANNEL_ID &&
