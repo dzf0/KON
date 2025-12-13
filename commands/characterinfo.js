@@ -24,10 +24,10 @@ const characterImages = {
   'Reiner': 'https://i.pinimg.com/originals/3e/4f/5a/3e4f5a6b7c8d9e0f1a2b3c4d5e6f7a8.jpg',
 
   // MY HERO ACADEMIA
-  'Shoto Todoroki': 'https://i.pinimg.com/originals/7a/8b/9c/7a8b9c0d1e2f3a4b5c6d7e8f9a0b1c2.jpg',
-  'Izuku Midoriya': 'https://i.pinimg.com/originals/1c/2d/3e/1c2d3e4f5a6b7c8d9e0f1a2b3c4d5e6.jpg',
-  'Bakugo': 'https://i.pinimg.com/originals/5e/6f/7a/5e6f7a8b9c0d1e2f3a4b5c6d7e8f9a0.jpg',
-  'Hanta Sero': 'https://i.pinimg.com/originals/9a/0b/1c/9a0b1c2d3e4f5a6b7c8d9e0f1a2b3c4.jpg',
+  'Shoto Todoroki': 'https://cdn.discordapp.com/attachments/1405349401945178152/1449305840791326775/latest.png?ex=693e6abf&is=693d193f&hm=ba24686d52ee807db4bdaed717b54d9dfe55fd037ba8725923c4050cffe18929&',
+  'Izuku Midoriya': 'https://cdn.discordapp.com/attachments/1405349401945178152/1449306180173299786/latest.png?ex=693e6b10&is=693d1990&hm=1e97a5a3f8ca6d497c2726b9f370b422d3c4a108e75956b890f45fe51b105526&',
+  'Bakugo': 'https://cdn.discordapp.com/attachments/1405349401945178152/1449305410048884816/latest.png?ex=693e6a58&is=693d18d8&hm=85a3f3b4e2e010ff9bf498bb5cf3a16b451727351fce0332bd6159d581a7fd9d&',
+  'Hanta Sero': 'https://cdn.discordapp.com/attachments/1405349401945178152/1449305050978451477/latest.png?ex=693e6a02&is=693d1882&hm=22510db28ae6b30df602403f10db1d66a3426aed809b74ed146abb0ca83c4b58&',
 
   // SOUL EATER
   'Tsubaki Nakatsukasa': 'https://i.pinimg.com/originals/3c/4d/5e/3c4d5e6f7a8b9c0d1e2f3a4b5c6d7e8.jpg',
