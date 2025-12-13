@@ -112,10 +112,10 @@ const client = new Client({
 client.commands = new Collection();
 const prefix = '.';
 
-// Load commands dynamically
+// Load commands dynamically (EXCLUDE keydrop.js)
 const commandsPath = path.join(__dirname, 'commands');
 const commandFiles = fs.existsSync(commandsPath)
-  ? fs.readdirSync(commandsPath).filter(file => file.endsWith('.js'))
+  ? fs.readdirSync(commandsPath).filter(file => file.endsWith('.js') && file !== 'keydrop.js')
   : [];
 
 for (const file of commandFiles) {
@@ -205,7 +205,7 @@ client.on('messageCreate', async (message) => {
 
   // ===== RESTRICT KEY CHANNEL =====
   const KEYS_CHANNEL_ID = '1401925188991582338'; // your keydrop channel ID
-  const allowedInKeysChannel = ['redeem', 'hangman', 'inventory', 'bal', 'baltop'];
+  const allowedInKeysChannel = ['redeem', 'hangman', 'inventory', 'bal', 'baltop', 'claim'];
 
   if (
     message.channel.id === KEYS_CHANNEL_ID &&
