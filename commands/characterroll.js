@@ -70,7 +70,7 @@ const characters = {
     tier: 'S',
     moves: [
       { name: 'Amaterasu', damage: 'S' },
-      { name: 'Tsukuyomi', damage: 'S (Mind)' },
+      { name: 'Tsukuyomi', damage: 'S' },
       { name: 'Susanoo (Totsuka Blade)', damage: 'S' },
       { name: 'Fireball Jutsu', damage: 'C-B' }
     ]
