@@ -4,7 +4,7 @@ const validRarities = [
   'Prismatic', 'Mythical', 'Legendary', 'Rare', 'Uncommon', 'Common'
 ];
 
-// Per‑rarity reward ranges (tuned to cap total at 2000)
+// Per‑rarity reward ranges
 const rarityRewards = {
   Prismatic: { min: 800, max: 2000 },
   Mythical:  { min: 500, max: 1500 },
@@ -37,18 +37,10 @@ module.exports = {
       let amount = parseInt(args[1]);
       if (isNaN(amount) || amount <= 0) amount = 1;
 
-      // userData is already loaded from MongoDB by index.js
-      if (!userData || typeof userData !== 'object') {
-        return message.channel.send('Bot error: user data is not available.');
-      }
-      if (!userData.inventory || typeof userData.inventory !== 'object') {
-        userData.inventory = {};
-      }
-      if (typeof userData.inventory[rarityKey] !== 'number') {
-        userData.inventory[rarityKey] = 0;
-      }
+      // Initialize inventory if needed
+      userData.inventory = userData.inventory || {};
+      const currentAmount = userData.inventory[rarityKey] || 0;
 
-      const currentAmount = userData.inventory[rarityKey];
       if (currentAmount < amount) {
         return message.channel.send(
           `You do not have enough **${rarityKey}** keys to open (**${amount}** requested, you have **${currentAmount}**).`
@@ -58,33 +50,41 @@ module.exports = {
       // Get rarity-based reward range
       const { min, max } = rarityRewards[rarityKey] || { min: 10, max: 100 };
 
+      // Calculate total reward from ALL keys (cap EACH key at 2000)
       let totalReward = 0;
       for (let i = 0; i < amount; i++) {
-        const roll = Math.floor(Math.random() * (max - min + 1)) + min;
+        let roll = Math.floor(Math.random() * (max - min + 1)) + min;
+        // Cap EACH individual key at 2000
+        if (roll > 2000) roll = 2000;
         totalReward += roll;
       }
 
-      // Hard cap: 2000 coins per open command
-      if (totalReward > 2000) totalReward = 2000;
+      // Remove keys from inventory
+      userData.inventory[rarityKey] = currentAmount - amount;
+      
+      // Clean up if zero
+      if (userData.inventory[rarityKey] === 0) {
+        delete userData.inventory[rarityKey];
+      }
 
-      userData.inventory[rarityKey] -= amount;
+      // Add total reward to balance
       userData.balance = (userData.balance || 0) + totalReward;
 
-      // Persist to MongoDB – one argument, wrapper adds userId
+      // Save BOTH inventory AND balance
       await saveUserData({
         inventory: userData.inventory,
-        balance: userData.balance,
+        balance: userData.balance
       });
 
       const embed = new EmbedBuilder()
         .setColor('Gold')
-        .setTitle('Keys Opened!')
+        .setTitle('🔑 Keys Opened!')
         .setDescription(
           `${message.author} opened **${amount} ${rarityKey}** ` +
           `key${amount > 1 ? 's' : ''} and received **${totalReward} coins**!`
         )
         .addFields(
-          { name: 'Keys left', value: `${userData.inventory[rarityKey]}`, inline: true },
+          { name: 'Keys Remaining', value: `${userData.inventory[rarityKey] || 0}`, inline: true },
           { name: 'New Balance', value: `${userData.balance} coins`, inline: true }
         )
         .setTimestamp();
