@@ -76,7 +76,7 @@ module.exports = {
             .setTitle('🔑 Key System')
             .setColor('#F39C12')
             .addFields(
-              { name: `${prefix}redeem`, value: 'Claim a dropped key', inline: false },
+              { name: `${prefix}redeem`, value: 'Claim a dropped key in the key drop channel', inline: false },
               { name: 'Passive Key Drops', value: 'Keys drop randomly in the key drop channel as you chat', inline: false }
             );
           break;
@@ -89,6 +89,34 @@ module.exports = {
               { name: `${prefix}lottery buy`, value: 'Buy a lottery ticket (max 5 per user)', inline: false },
               { name: `${prefix}lottery status`, value: 'Check current pot and tickets sold', inline: false },
               { name: `${prefix}lottery draw`, value: '(Admin) Draw a winner from all tickets', inline: false }
+            );
+          break;
+
+        case 'characters':
+          embed = new EmbedBuilder()
+            .setTitle('⭐ Character System')
+            .setColor('#FF1493')
+            .addFields(
+              { name: `${prefix}roll`, value: 'Roll for an anime character (costs 500 coins)', inline: false },
+              { name: `${prefix}characters`, value: 'View your character collection', inline: false },
+              { name: `${prefix}charinfo <name>`, value: 'View details of a character you own', inline: false },
+              { name: 'Character Tiers', value: 'S+ (0.5%) • S (1.5%) • A (8%) • B (20%) • C (35%) • D (35%)', inline: false }
+            );
+          break;
+
+        case 'battle':
+          embed = new EmbedBuilder()
+            .setTitle('⚔️ Battle Commands')
+            .setColor('#FF4500')
+            .addFields(
+              { name: `${prefix}battle @user`, value: 'Challenge another player to battle', inline: false },
+              { name: `${prefix}battle add <character name>`, value: 'Add a character to your battle team (max 4)', inline: false },
+              { name: `${prefix}battle remove <character name>`, value: 'Remove a character from your team', inline: false },
+              { name: `${prefix}battle team`, value: 'View your current battle team', inline: false },
+              { name: `${prefix}battle ready`, value: 'Ready up to start the battle', inline: false },
+              { name: `${prefix}battle attack <move#>`, value: 'Use a move during battle', inline: false },
+              { name: `${prefix}battle cancel`, value: 'Cancel the current battle', inline: false },
+              { name: 'Battle Info', value: 'Turn-based combat with up to 4 characters per team. Moves have limited uses based on power tier!', inline: false }
             );
           break;
 
@@ -105,13 +133,13 @@ module.exports = {
               { name: `${prefix}admin remove currency <amount> @user`, value: 'Remove coins from a user', inline: false },
               { name: `${prefix}admin remove keys <rarity> <amount> @user`, value: 'Remove keys from a user', inline: false },
               { name: `${prefix}admin reset @user`, value: 'Reset a user\'s balance and inventory', inline: false },
-              { name: `${prefix}admin spawn <rarity> hannel_id>`, value: 'Spawn a key in a specific channel', inline: false },
+              { name: `${prefix}admin spawn <rarity> <channel_id>`, value: 'Spawn a key in a specific channel', inline: false },
               { name: `${prefix}adminlogs`, value: 'View admin action logs from past 7 days', inline: false }
             );
           break;
 
         default:
-          return message.channel.send(`❌ Unknown category. Available: \`economy\`, \`games\`, \`multiplayer\`, \`shop\`, \`keys\`, \`lottery\`, \`admin\``);
+          return message.channel.send(`❌ Unknown category. Available: \`economy\`, \`games\`, \`multiplayer\`, \`shop\`, \`keys\`, \`lottery\`, \`characters\`, \`battle\`, \`admin\``);
       }
 
       embed.setFooter({ text: `Requested by ${message.author.username}`, iconURL: message.author.displayAvatarURL() })
@@ -125,7 +153,7 @@ module.exports = {
       .setTitle('🤖 Bot Commands')
       .setDescription(
         `**Prefix:** \`${prefix}\`\n\n` +
-        `Use \`${prefix}help ategory>\` for detailed command info\n\n` +
+        `Use \`${prefix}help <category>\` for detailed command info\n\n` +
         `**Available Categories:**\n` +
         `• \`economy\` - Balance, daily rewards, leaderboard\n` +
         `• \`games\` - Betting games and mini-games\n` +
@@ -133,6 +161,8 @@ module.exports = {
         `• \`shop\` - Shop, inventory, trading\n` +
         `• \`keys\` - Key drop system\n` +
         `• \`lottery\` - Lottery system\n` +
+        `• \`characters\` - Roll and collect anime characters\n` +
+        `• \`battle\` - Battle other players with your characters\n` +
         `• \`admin\` - Admin commands (Admin only)`
       )
       .setColor('#5865F2')
@@ -146,6 +176,11 @@ module.exports = {
         {
           name: '🎮 Quick Games',
           value: `\`${prefix}dice 100\` \`${prefix}slots 50\` \`${prefix}rps 100 rock\``,
+          inline: false
+        },
+        {
+          name: '⭐ Character System',
+          value: `\`${prefix}roll\` \`${prefix}characters\` \`${prefix}battle @user\``,
           inline: false
         }
       )
