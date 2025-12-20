@@ -18,7 +18,7 @@ const userSchema = new mongoose.Schema({
   balance: { type: Number, default: 0 },
   inventory: { type: Object, default: {} },
   lastDaily: { type: Date, default: null },
-  characters: { type: Array, default: [] }, // Added for character gacha system
+  characters: { type: Array, default: [] },
 });
 
 const User = mongoose.model('User', userSchema);
@@ -37,7 +37,6 @@ const adminLogSchema = new mongoose.Schema({
 
 const AdminLog = mongoose.model('AdminLog', adminLogSchema);
 
-// Helper to log admin actions
 async function logAdminAction(adminId, adminUsername, command, action, targetUserId = null, targetUsername = null, details = '') {
   try {
     const log = new AdminLog({
@@ -56,49 +55,6 @@ async function logAdminAction(adminId, adminUsername, command, action, targetUse
   }
 }
 
-// Connect to MongoDB
-mongoose
-  .connect(process.env.MONGO_URI)
-  .then(() => console.log('Connected to MongoDB'))
-  .catch(err => console.error('MongoDB connection error:', err));
-
-// Get user from MongoDB
-async function getUserData(userId) {
-  let user = await User.findOne({ userId });
-  if (!user) {
-    user = new User({ userId, balance: 0, inventory: {}, lastDaily: null, characters: [] });
-    await user.save();
-  }
-  return user.toObject();
-}
-
-// Save user to MongoDB
-async function saveUserData(userId, userData) {
-  await User.updateOne(
-    { userId },
-    { $set: userData },
-    { upsert: true }
-  );
-}
-
-// Update any user's balance (for lottery, gifts, etc.)
-async function updateUserBalance(userId, amount) {
-  const user = await User.findOneAndUpdate(
-    { userId },
-    { $inc: { balance: amount } },
-    { upsert: true, new: true }
-  );
-  return user.toObject();
-}
-
-// Add key to inventory (used by keydrop/claim/admin)
-async function addKeyToInventory(userId, rarity, quantity) {
-  const user = await getUserData(userId);
-  user.inventory = user.inventory || {};
-  user.inventory[rarity] = (user.inventory[rarity] || 0) + quantity;
-  await saveUserData(userId, { inventory: user.inventory });
-}
-
 // ===== DISCORD CLIENT SETUP =====
 const client = new Client({
   intents: [
@@ -113,7 +69,6 @@ client.commands = new Collection();
 const prefix = '.';
 
 // ===== GLOBAL COOLDOWNS MAP (per user + command) =====
-// Map<commandName, Map<userId, timestamp>>
 const cooldowns = new Map();
 const COOLDOWN_MS = 5000;
 
@@ -154,6 +109,40 @@ let guessGame = {
   number: null,
   channelId: null,
 };
+
+// ===== DB HELPERS =====
+async function getUserData(userId) {
+  let user = await User.findOne({ userId });
+  if (!user) {
+    user = new User({ userId, balance: 0, inventory: {}, lastDaily: null, characters: [] });
+    await user.save();
+  }
+  return user.toObject();
+}
+
+async function saveUserData(userId, userData) {
+  await User.updateOne(
+    { userId },
+    { $set: userData },
+    { upsert: true }
+  );
+}
+
+async function updateUserBalance(userId, amount) {
+  const user = await User.findOneAndUpdate(
+    { userId },
+    { $inc: { balance: amount } },
+    { upsert: true, new: true }
+  );
+  return user.toObject();
+}
+
+async function addKeyToInventory(userId, rarity, quantity) {
+  const user = await getUserData(userId);
+  user.inventory = user.inventory || {};
+  user.inventory[rarity] = (user.inventory[rarity] || 0) + quantity;
+  await saveUserData(userId, { inventory: user.inventory });
+}
 
 // ===== MESSAGE HANDLER =====
 client.on('messageCreate', async (message) => {
@@ -209,14 +198,14 @@ client.on('messageCreate', async (message) => {
   if (!command) return;
 
   // ===== RESTRICT KEY CHANNEL =====
-  const KEYS_CHANNEL_ID = '1401925188991582338'; // your keydrop channel ID
+  const KEYS_CHANNEL_ID = '1401925188991582338';
   const allowedInKeysChannel = ['redeem', 'hangman', 'inventory', 'bal', 'baltop', 'claim'];
 
   if (
     message.channel.id === KEYS_CHANNEL_ID &&
     !allowedInKeysChannel.includes(command.name)
   ) {
-    return; // ignore .dice / .hl / others in key channel
+    return;
   }
   // ================================
 
@@ -275,6 +264,7 @@ client.once('ready', () => {
   console.log(`Logged in as ${client.user.tag}`);
 });
 
+// ===== RARITY HELPER =====
 function getRandomRarity() {
   const roll = Math.random();
   let cumulative = 0;
@@ -285,4 +275,25 @@ function getRandomRarity() {
   return rarities[rarities.length - 1].name;
 }
 
-client.login(process.env.DISCORD_TOKEN);
+// ===== START BOT ONLY AFTER DB CONNECTS =====
+async function startBot() {
+  try {
+    mongoose.connection.on('error', err => {
+      console.error('Mongo connection error:', err);
+    });
+    mongoose.connection.on('disconnected', () => {
+      console.error('Mongo disconnected');
+    });
+
+    await mongoose.connect(process.env.MONGO_URI); // wait for connection[web:172][web:185]
+    console.log('Connected to MongoDB');
+
+    await client.login(process.env.DISCORD_TOKEN);
+    console.log('Bot logged in');
+  } catch (err) {
+    console.error('Failed to start bot:', err);
+    process.exit(1);
+  }
+}
+
+startBot();
