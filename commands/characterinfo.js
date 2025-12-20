@@ -53,18 +53,16 @@ module.exports = {
     }
 
     const chars = userData.characters || [];
-    
-    // Case-insensitive search
-    const char = chars.find(c => 
+
+    const char = chars.find(c =>
       c.name.toLowerCase().trim() === charName.toLowerCase().trim()
     );
 
     if (!char) {
-      // Show helpful message with available characters
       if (chars.length === 0) {
         return message.channel.send(`❌ You don't own any characters yet! Use \`.roll\` to get one.`);
       }
-      
+
       const ownedNames = chars.map(c => c.name).join(', ');
       return message.channel.send(
         `❌ You don't own **${charName}**.\n\nYour characters: ${ownedNames}`
@@ -73,27 +71,45 @@ module.exports = {
 
     const movesText = char.moves.map(m => `• **${m.name}** (${m.damage})`).join('\n');
 
-    // Get character image (case-insensitive lookup)
     const imageKey = Object.keys(characterImages).find(
       key => key.toLowerCase() === char.name.toLowerCase()
     );
-    
-    // Use placeholder that will definitely work
+
     const imageUrl = imageKey ? characterImages[imageKey] : null;
 
     const embed = new EmbedBuilder()
-      .setTitle(`${char.name} ⭐`)
+      .setTitle(`˗ˏˋ 𐙚 ⭐ ${char.name} ⭐ 𐙚 ˎˊ˗`)
       .setDescription(
-        `**Series:** ${char.series}\n` +
-        `**Tier:** ${char.tier}\n\n` +
-        `**Moves:**\n${movesText}`
+        [
+          '꒰ঌ celestial profile ໒꒱',
+          '',
+          `📺 **Series:** ${char.series}`,
+          `✨ **Tier:** ${char.tier}`,
+          '',
+          `**𝔞𝔟𝔦𝔩𝔦𝔱𝔦𝔢𝔰:**`,
+          movesText
+        ].join('\n')
       )
-      .setColor('#00BFFF')
-      .setTimestamp();
+      .setColor('#F5E6FF')
+      .setTimestamp()
+      .setFooter({ text: 'System • Character Profile' });
 
-    // Only add image if URL exists
+    // Use image as large embed image with border description
     if (imageUrl) {
-      embed.setThumbnail(imageUrl);
+      embed.setImage(imageUrl);
+      embed.setDescription(
+        [
+          '✧˚₊‧════╮ 𐙚 celestial profile 𐙚 ╭════‧₊˚✧',
+          '',
+          `📺 **Series:** ${char.series}`,
+          `✨ **Tier:** ${char.tier}`,
+          '',
+          `**𝔞𝔟𝔦𝔩𝔦𝔱𝔦𝔢𝔰:**`,
+          movesText,
+          '',
+          '✧˚₊‧════════════════════╮ 𐙚 ╭════════════════════‧₊˚✧'
+        ].join('\n')
+      );
     }
 
     return message.channel.send({ embeds: [embed] });

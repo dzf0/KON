@@ -12,7 +12,7 @@ const itemEmojis = {
 };
 
 module.exports = {
-  name: 'inventory',
+  name:'inventory',
   description: 'Check your inventory',
   async execute({ message, userData }) {
     const inventory = userData.inventory || {};
@@ -26,19 +26,25 @@ module.exports = {
       .filter(([item, count]) => count > 0)
       .map(([item, count]) => {
         let displayName = item;
-        
+
         // Normalize key names
-        if (item.toLowerCase().includes('key') || 
-            ['common', 'uncommon', 'rare', 'legendary', 'mythical', 'prismatic'].includes(item.toLowerCase())) {
+        if (
+          item.toLowerCase().includes('key') ||
+          ['common', 'uncommon', 'rare', 'legendary', 'mythical', 'prismatic'].includes(
+            item.toLowerCase()
+          )
+        ) {
           const rarityName = item.replace(/\s*key\s*/gi, '').trim();
-          const capitalized = rarityName.charAt(0).toUpperCase() + rarityName.slice(1).toLowerCase();
+          const capitalized =
+            rarityName.charAt(0).toUpperCase() + rarityName.slice(1).toLowerCase();
           displayName = `${capitalized} key`;
         }
-        
+
         // Normalize token names
         if (item.toLowerCase().includes('token')) {
           const tokenType = item.replace(/\s*token\s*/gi, '').trim();
-          const capitalized = tokenType.charAt(0).toUpperCase() + tokenType.slice(1).toLowerCase();
+          const capitalized =
+            tokenType.charAt(0).toUpperCase() + tokenType.slice(1).toLowerCase();
           displayName = `${capitalized} token`;
         }
 
@@ -50,10 +56,17 @@ module.exports = {
       .join('\n');
 
     const inventoryEmbed = new EmbedBuilder()
-      .setTitle(`${message.author.username}'s Inventory`)
-      .setDescription(formattedItems || 'Your inventory is empty.')
-      .setColor('#FFD700')
-      .setTimestamp();
+      .setTitle(`˗ˏˋ 𐙚 ${message.author.username}'𝕤 𝕚𝕟𝕧𝕖𝕟𝕥𝕠𝕣𝕪 𐙚 ˎˊ˗`)
+      .setDescription(
+        [
+          '꒰ঌ your celestial belongings ໒꒱',
+          '',
+          formattedItems || 'Your inventory is empty.'
+        ].join('\n')
+      )
+      .setColor('#F5E6FF')
+      .setTimestamp()
+      .setFooter({ text: 'System • Item Pouch' });
 
     message.channel.send({ embeds: [inventoryEmbed] });
   },

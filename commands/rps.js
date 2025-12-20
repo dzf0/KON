@@ -1,9 +1,9 @@
 const { EmbedBuilder } = require('discord.js');
 
 const choices = {
-  rock: "🪨",
-  paper: "📄",
-  scissors: "✂️"
+  rock: '🪨',
+  paper: '📄',
+  scissors: '✂️',
 };
 
 function getBotChoice() {
@@ -12,13 +12,14 @@ function getBotChoice() {
 }
 
 function getResult(player, bot) {
-  if (player === bot) return "draw";
+  if (player === bot) return 'draw';
   if (
-    (player === "rock" && bot === "scissors") ||
-    (player === "paper" && bot === "rock") ||
-    (player === "scissors" && bot === "paper")
-  ) return "win";
-  return "lose";
+    (player === 'rock' && bot === 'scissors') ||
+    (player === 'paper' && bot === 'rock') ||
+    (player === 'scissors' && bot === 'paper')
+  )
+    return 'win';
+  return 'lose';
 }
 
 module.exports = {
@@ -35,11 +36,10 @@ module.exports = {
     if (isNaN(bet) || bet <= 0) {
       return message.channel.send('Please enter a valid positive amount to bet.');
     }
-    if (!["rock", "paper", "scissors"].includes(playerChoice)) {
+    if (!['rock', 'paper', 'scissors'].includes(playerChoice)) {
       return message.channel.send('Invalid choice. Use `rock`, `paper`, or `scissors`.');
     }
 
-    // userData is already loaded from MongoDB by index.js
     if (typeof userData.balance !== 'number') userData.balance = 0;
 
     if (userData.balance < bet) {
@@ -52,32 +52,46 @@ module.exports = {
     const botChoice = getBotChoice();
     const outcome = getResult(playerChoice, botChoice);
 
-    let embed = new EmbedBuilder()
-      .setTitle('Rock Paper Scissors')
-      .addFields(
-        { name: 'Your Choice', value: `${choices[playerChoice]} ${playerChoice}`, inline: true },
-        { name: 'Bot Choice', value: `${choices[botChoice]} ${botChoice}`, inline: true }
-      )
-      .setTimestamp();
+    let resultBlock =
+      '╭──────────────────────────────╮\n' +
+      `│  ① You: ${choices[playerChoice]} **${playerChoice}**   │\n` +
+      `│  ② Bot: ${choices[botChoice]} **${botChoice}**   │\n`;
 
-    if (outcome === "win") {
+    if (outcome === 'win') {
       userData.balance += bet * 2;
-      embed.setColor('#00FF00')
-        .setDescription(`You won! 🎉 You get ${bet * 2}.`);
-    } else if (outcome === "draw") {
+      resultBlock +=
+        '│  **✨ HEAVENLY VICTORY ✨**  │\n' +
+        `│  Reward: **${bet * 2}**      │\n`;
+    } else if (outcome === 'draw') {
       userData.balance += bet;
-      embed.setColor('#CCCC00')
-        .setDescription("It's a draw. Your bet was refunded.");
+      resultBlock +=
+        '│  **☁️ CELESTIAL DRAW ☁️**   │\n' +
+        '│  Bet refunded              │\n';
     } else {
-      embed.setColor('#FF0000')
-        .setDescription("You lost your bet. 😢");
+      resultBlock +=
+        '│  **💔 FALLEN BET – YOU LOSE**│\n';
     }
 
-    embed.addFields({ name: 'New Balance', value: userData.balance.toString(), inline: false });
+    resultBlock += '╰──────────────────────────────╯';
+
+    const embed = new EmbedBuilder()
+      .setTitle('˗ˏˋ 𐙚 ✂️ 𝔠𝔢𝔩𝔢𝔰𝔱𝔦𝔞𝔩 ℝ𝕠𝕔𝕜 𝕡𝕒𝕡𝕖𝕣 𝕤𝕔𝕚𝕤𝕤𝕠𝕣𝕤 𐙚 ˎˊ˗')
+      .setDescription(
+        [
+          '꒰ঌ heavenly duel results ໒꒱',
+          '',
+          resultBlock,
+          '',
+          `💰 **New Balance:** ${userData.balance} coins`,
+        ].join('\n')
+      )
+      .setColor('#F5E6FF')
+      .setTimestamp()
+      .setFooter({ text: 'System • Angelic Arena ✧' });
 
     // Persist to MongoDB – one argument, wrapper adds userId
     await saveUserData({ balance: userData.balance });
 
     message.channel.send({ embeds: [embed] });
-  }
+  },
 };

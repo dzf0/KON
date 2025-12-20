@@ -37,9 +37,10 @@ async function handleKeyDrop(message, client) {
       const channel = client.channels.cache.get(currentKey.channelId);
       if (channel) {
         const expireEmbed = new EmbedBuilder()
-          .setTitle('Key Expired')
+          .setTitle('✧˚₊‧ 🔒 𝕂𝕖𝕪 𝔼𝕩𝕡𝕚𝕣𝕖𝕕 ‧₊˚✧')
           .setDescription(`The **${currentKey.rarity}** key expired.`)
-          .setColor('Red')
+          .setColor('#F5E6FF')
+          .setFooter({ text: 'System • Keydrop Control' })
           .setTimestamp();
         await channel.send({ embeds: [expireEmbed] });
       }
@@ -47,7 +48,7 @@ async function handleKeyDrop(message, client) {
     }
   }
 
-  // 5% chance per message to spawn a new key if none active
+  // 2.5% chance per message to spawn a new key if none active
   if (!currentKey && Math.random() <= 0.025) {
     const rarityName = getRandomRarity(); // string like "Legendary"
 
@@ -59,9 +60,16 @@ async function handleKeyDrop(message, client) {
     };
 
     const dropEmbed = new EmbedBuilder()
-      .setTitle('🔑 Key Dropped!')
-      .setDescription(`A **${rarityName}** key dropped! Type .redeem to claim it!`)
-      .setColor('Green')
+      .setTitle('✧˚₊‧ 🔑 𝕂𝕖𝕪 𝔻𝕣𝕠𝕡𝕡𝕖𝕕 ‧₊˚✧')
+      .setDescription(
+        [
+          '˗ˏˋ 𐙚 𝔞 𝔠𝔢𝔩𝔢𝔰𝔱𝔦𝔞𝔩 𝔨𝔢𝔶 𝔣𝔞𝔩𝔩𝔰 𝔣𝔯𝔬𝔪 𝔱𝔥𝔢 𝔰𝔨𝔶 𐙚 ˎˊ˗',
+          '',
+          `A **${rarityName}** key dropped! Type \`.redeem\` to claim it!`
+        ].join('\n')
+      )
+      .setColor('#F5E6FF')
+      .setFooter({ text: 'System • Keydrop Control' })
       .setTimestamp();
 
     await message.channel.send({ embeds: [dropEmbed] });
@@ -83,9 +91,16 @@ async function spawnKey(rarity, channelId, client) {
   const channel = client.channels.cache.get(channelId);
   if (channel) {
     const dropEmbed = new EmbedBuilder()
-      .setTitle('🔑 Key Spawned by Admin')
-      .setDescription(`An **${rarity}** key has been spawned! Type .redeem to claim it!`)
-      .setColor('Gold')
+      .setTitle('✧˚₊‧ 🔑 𝕂𝕖𝕪 𝕊𝕡𝕒𝕨𝕟𝕖𝕕 𝕓𝕪 𝔸𝕕𝕞𝕚𝕟 ‧₊˚✧')
+      .setDescription(
+        [
+          '꒰ঌ 𝔞 𝔰𝔥𝔦𝔫𝔦𝔫𝔤 𝔨𝔢𝔶 𝔥𝔞𝔰 𝔟𝔢𝔢𝔫 𝔠𝔞𝔩𝔩𝔢𝔡 𝔡𝔬𝔴𝔫 ໒꒱',
+          '',
+          `An **${rarity}** key has been spawned! Type \`.redeem\` to claim it!`
+        ].join('\n')
+      )
+      .setColor('#F5E6FF')
+      .setFooter({ text: 'System • Keydrop Control' })
       .setTimestamp();
 
     await channel.send({ embeds: [dropEmbed] });
@@ -104,9 +119,16 @@ async function claimKey(userId, addKeyToInventory, client) {
   const channel = client.channels.cache.get(currentKey.channelId);
   if (channel) {
     const claimEmbed = new EmbedBuilder()
-      .setTitle('🔑 Key Claimed!')
-      .setDescription(`<@${userId}> claimed the **${currentKey.rarity}** key!`)
-      .setColor('Gold')
+      .setTitle('✧˚₊‧ 🔑 𝕂𝕖𝕪 ℂ𝕝𝕒𝕚𝕞𝕖𝕕 ‧₊˚✧')
+      .setDescription(
+        [
+          `<@${userId}> claimed the **${currentKey.rarity}** key!`,
+          '',
+          'ෆ 𝔱𝔥𝔢 𝔟𝔩𝔢𝔰𝔰𝔦𝔫𝔤 𝔥𝔞𝔰 𝔟𝔢𝔢𝔫 𝔯𝔢𝔠𝔢𝔦𝔳𝔢𝔡 ෆ'
+        ].join('\n')
+      )
+      .setColor('#F5E6FF')
+      .setFooter({ text: 'System • Keydrop Control' })
       .setTimestamp();
 
     await channel.send({ embeds: [claimEmbed] });

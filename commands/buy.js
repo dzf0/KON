@@ -26,7 +26,6 @@ module.exports = {
       return message.channel.send('❌ Quantity must be at least 1.');
     }
 
-    // Case-insensitive search
     const item = shopItems.find(i => i.id.toLowerCase() === itemIdInput);
     if (!item) {
       return message.channel.send(
@@ -39,42 +38,47 @@ module.exports = {
 
     if (currentBalance < totalPrice) {
       const needed = totalPrice - currentBalance;
-      return message.channel.send(
-        `❌ Insufficient balance! You need **${needed}** more coins.\n` +
-        `Your balance: **${currentBalance}** coins\n` +
-        `Item price: **${totalPrice}** coins`
-      );
+      return message.channel.send({
+        embeds: [
+          new EmbedBuilder()
+            .setColor('#FFB3C6')
+            .setTitle('✧˚₊‧ ❌ 𝔦𝔫𝔰𝔲𝔣𝔣𝔦𝔠𝔦𝔢𝔫𝔱 𝔟𝔞𝔩𝔞𝔫𝔠𝔢 ‧₊˚✧')
+            .setDescription(`You need **${needed}** more coins to complete this purchase.`)
+            .addFields(
+              { name: '💰 Your Balance', value: `**${currentBalance}** coins`, inline: true },
+              { name: '💸 Item Price', value: `**${totalPrice}** coins`, inline: true }
+            )
+            .setFooter({ text: 'System • Shop' })
+        ]
+      });
     }
 
-    // Deduct price
     userData.balance -= totalPrice;
 
-    // Add to inventory
     userData.inventory = userData.inventory || {};
     userData.inventory[item.name] = (userData.inventory[item.name] || 0) + quantity;
 
-    // Save to MongoDB
     await saveUserData({
       balance: userData.balance,
       inventory: userData.inventory,
     });
 
     const embed = new EmbedBuilder()
-      .setTitle('✅ Purchase Complete')
-      .setDescription(`You bought **${quantity}x ${item.emoji} ${item.name}**`)
-      .addFields(
-        { name: 'Price per Item', value: `${item.price} coins`, inline: true },
-        { name: 'Total Price', value: `${totalPrice} coins`, inline: true },
-        { name: 'Quantity', value: `${quantity}x`, inline: true },
-        { name: 'New Balance', value: `${userData.balance} coins`, inline: false },
-        { name: 'Total Owned', value: `${userData.inventory[item.name]}x`, inline: false }
+      .setTitle('˗ˏˋ 𐙚 ✅ 𝔓𝔲𝔯𝔠𝔥𝔞𝔰𝔢 ℭ𝔬𝔪𝔭𝔩𝔦𝔠𝔱𝔯 𐙚 ˎˊ˗')
+      .setDescription(
+        `꒰ঌ You bought **${quantity}x** ${item.emoji} **${item.name}** ໒꒱`
       )
-      .setColor('#00FF00')
-      .setTimestamp();
+      .addFields(
+        { name: '💵 Price per Item', value: `**${item.price}** coins`, inline: true },
+        { name: '💸 Total Price', value: `**${totalPrice}** coins`, inline: true },
+        { name: '📦 Quantity', value: `**${quantity}x**`, inline: true },
+        { name: '💰 New Balance', value: `**${userData.balance}** coins`, inline: false },
+        { name: '🎁 Total Owned', value: `**${userData.inventory[item.name]}x**`, inline: false }
+      )
+      .setColor('#C1FFD7')
+      .setTimestamp()
+      .setFooter({ text: 'System • Shop' });
 
     return message.channel.send({ embeds: [embed] });
   },
 };
-
-
-

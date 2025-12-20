@@ -54,14 +54,13 @@ module.exports = {
       let totalReward = 0;
       for (let i = 0; i < amount; i++) {
         let roll = Math.floor(Math.random() * (max - min + 1)) + min;
-        // Cap EACH individual key at 2000
         if (roll > 2000) roll = 2000;
         totalReward += roll;
       }
 
       // Remove keys from inventory
       userData.inventory[rarityKey] = currentAmount - amount;
-      
+
       // Clean up if zero
       if (userData.inventory[rarityKey] === 0) {
         delete userData.inventory[rarityKey];
@@ -77,17 +76,29 @@ module.exports = {
       });
 
       const embed = new EmbedBuilder()
-        .setColor('Gold')
-        .setTitle('🔑 Keys Opened!')
+        .setColor('#F5E6FF')
+        .setTitle('˗ˏˋ 𐙚 🔑 𝔎𝔢𝔶𝔰 𝔬𝔭𝔢𝔫𝔢𝔡! 𐙚 ˎˊ˗')
         .setDescription(
-          `${message.author} opened **${amount} ${rarityKey}** ` +
-          `key${amount > 1 ? 's' : ''} and received **${totalReward} coins**!`
+          [
+            `${message.author} opened **${amount} ${rarityKey}** key${amount > 1 ? 's' : ''}.`,
+            '',
+            `꒰ঌ The heavens grant you **${totalReward}** coins ໒꒱`
+          ].join('\n')
         )
         .addFields(
-          { name: 'Keys Remaining', value: `${userData.inventory[rarityKey] || 0}`, inline: true },
-          { name: 'New Balance', value: `${userData.balance} coins`, inline: true }
+          {
+            name: '🔑 Keys Remaining',
+            value: `**${userData.inventory[rarityKey] || 0}**`,
+            inline: true
+          },
+          {
+            name: '💰 New Balance',
+            value: `**${userData.balance}** coins`,
+            inline: true
+          }
         )
-        .setTimestamp();
+        .setTimestamp()
+        .setFooter({ text: 'System • Key Vault' });
 
       await message.channel.send({ embeds: [embed] });
 

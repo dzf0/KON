@@ -10,7 +10,6 @@ module.exports = {
       return message.channel.send('❌ You don\'t have any characters yet! Use `.roll` to get one.');
     }
 
-    // Remove duplicates by using a Map (keeps first occurrence of each character)
     const uniqueChars = [];
     const seen = new Set();
 
@@ -22,7 +21,6 @@ module.exports = {
       }
     }
 
-    // Group by tier
     const grouped = {};
     for (const char of uniqueChars) {
       if (!grouped[char.tier]) grouped[char.tier] = [];
@@ -32,15 +30,22 @@ module.exports = {
     let description = '';
     for (const tier of ['S+', 'S', 'A', 'B', 'C', 'D']) {
       if (grouped[tier]) {
-        description += `\n**${tier} Tier:**\n${grouped[tier].join(', ')}\n`;
+        description +=
+          `\n✧˚₊‧ **${tier} Tier** ‧₊˚✧\n` +
+          `${grouped[tier].join(', ')}\n`;
       }
     }
 
     const embed = new EmbedBuilder()
-      .setTitle(`${message.author.username}'s Character Collection`)
-      .setDescription(description || 'No characters.')
-      .setColor('#FFD700')
-      .setFooter({ text: `${uniqueChars.length} unique characters (${chars.length} total)` })
+      .setTitle(`˗ˏˋ 𐙚 ${message.author.username}'𝕤 ℭ𝔥𝔞𝔯𝔞𝔠𝔱𝔢𝔯 ℭ𝔬𝔩𝔩𝔢𝔠𝔱𝔦𝔬𝔫 𐙚 ˎˊ˗`)
+      .setDescription(
+        description ||
+        '꒰ঌ No characters found in your celestial archive ໒꒱'
+      )
+      .setColor('#F5E6FF')
+      .setFooter({
+        text: `${uniqueChars.length} unique characters • ${chars.length} total pulls`
+      })
       .setTimestamp();
 
     return message.channel.send({ embeds: [embed] });

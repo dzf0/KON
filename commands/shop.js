@@ -12,35 +12,45 @@ module.exports = {
   description: 'View the shop and available items to buy',
   async execute({ message }) {
     const embed = new EmbedBuilder()
-      .setTitle('✧˚ · 𐙚  Heavenly Emporium 𐙚 · ˚✧')
+      .setTitle('˗ˏˋ 𐙚 🛒 𝔥𝔢𝔞𝔳𝔢𝔫𝔩𝔶 𝔢𝔪𝔭𝔬𝔯𝔦𝔲𝔪 𐙚 ˎˊ˗')
       .setDescription(
         [
-          '˗ˏˋ 𓏲࿐₊˚ෆ A little market above the clouds ෆ˚₊࿐𓏲 ˎˊ˗',
+          'Use `.buy <item_id> [quantity]` to exchange your coins for celestial goods.',
           '',
-          'Use `.buy <item_id> [quantity]` to trade coins for **celestial trinkets**.',
+          '────────────────────────────────────────',
         ].join('\n')
       )
-      .setColor('#F5E6FF') // soft angelic pastel[web:155]
-      .setFooter({ text: '₊˚ෆ guided by soft wings and starlight ෆ˚₊' })
+      .setColor('#F5E6FF')
+      .setFooter({ text: 'System • Angelic Shop ✧' })
       .setTimestamp();
 
-    // soft category header
+    // Section header styled like baltop
+    const headerBlock =
+      '╭──────────────────────────────╮\n' +
+      '│   ✧ Available Blessings ✧   │\n' +
+      '╰──────────────────────────────╯';
+
     embed.addFields({
-      name: '✧ ˚｡⋆ Available Blessings ⋆｡˚ ✧',
-      value: 'pick something pretty for your soul ↓',
+      name: ' ',
+      value: headerBlock,
       inline: false,
     });
 
     for (const item of shopItems) {
+      const itemBlock =
+        '╭──────────────────────────────╮\n' +
+        `│  ${item.emoji} **${item.name}**             │\n` +
+        `│  Price: \`${item.price.toLocaleString()} coins\`   │\n` +
+        `│  ID: \`${item.id}\`                    │\n` +
+        '╰──────────────────────────────╯';
+
       embed.addFields({
-        name: `૮₍ ${item.emoji} ₎ა  ${item.name}`,
-        value:
-          [
-            `·ೃ✧ **Price:** \`${item.price.toLocaleString()} coins\``,
-            `·ೃ✧ **ID:** \`${item.id}\``,
-            `·ೃ✧ *${item.description}*`,
-            '꒰ ✧ softly wrapped in moonlight ✧ ꒱',
-          ].join('\n'),
+        name: ' ',
+        value: [
+          itemBlock,
+          `*${item.description}*`,
+          ''
+        ].join('\n'),
         inline: false,
       });
     }

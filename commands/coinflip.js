@@ -31,31 +31,38 @@ module.exports = {
     const coinSides = ['h', 't'];
     const result = coinSides[Math.floor(Math.random() * coinSides.length)];
 
-    let embed = new EmbedBuilder()
-      .setTitle('🪙 Coin Flip Result')
-      .setTimestamp();
+    let winnings = 0;
+    let block =
+      '╭──────────────────────────────╮\n' +
+      `│  🪙 Result: **${result === 'h' ? 'Heads' : 'Tails'}**      │\n`;
 
     if (guess === result) {
-      // User wins: return original bet + winnings (total 2x bet)
-      const winnings = betAmount * 2;
+      winnings = betAmount * 2;
       userData.balance += winnings;
-      embed.setColor('#00FF00')
-        .setDescription(
-          `${message.author}, The coin landed on **${result === 'h' ? 'Heads' : 'Tails'}**! You won ${betAmount} (doubled your bet)!`
-        )
-        .addFields(
-          { name: 'New Balance', value: userData.balance.toString(), inline: true }
-        );
+      block +=
+        '│  **✨ HEAVENLY FLIP – YOU WIN ✨** │\n' +
+        `│  Reward: **${winnings}** coins      │\n`;
     } else {
-      // User loses: bet already deducted
-      embed.setColor('#FF0000')
-        .setDescription(
-          `${message.author}, The coin landed on **${result === 'h' ? 'Heads' : 'Tails'}**. You lost ${betAmount}.`
-        )
-        .addFields(
-          { name: 'New Balance', value: userData.balance.toString(), inline: true }
-        );
+      block +=
+        '│  **💔 FALLEN BET – YOU LOSE**       │\n';
     }
+
+    block += '╰──────────────────────────────╯';
+
+    const embed = new EmbedBuilder()
+      .setTitle('˗ˏˋ 𐙚 🪙 𝔠𝔢𝔩𝔢𝔰𝔱𝔦𝔞𝔩 𝔠𝔬𝔦𝔫 𝔉𝔩𝔦𝔭 𐙚 ˎˊ˗')
+      .setDescription(
+        [
+          `${message.author} cast a coin into the heavens.`,
+          '',
+          block,
+          '',
+          `💰 **New Balance:** ${userData.balance} coins`,
+        ].join('\n')
+      )
+      .setColor('#F5E6FF')
+      .setTimestamp()
+      .setFooter({ text: 'System • Angelic Games ✧' });
 
     // Persist to MongoDB (wrapped in index.js with userId)
     await saveUserData({ balance: userData.balance });

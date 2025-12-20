@@ -9,7 +9,6 @@ module.exports = {
       return message.channel.send('Please enter a valid positive bet amount. Usage: `.slots <amount>`');
     }
 
-    // userData is already loaded from MongoDB by index.js
     if (typeof userData.balance !== 'number') userData.balance = 0;
 
     if (userData.balance < betAmount) {
@@ -30,32 +29,46 @@ module.exports = {
     ];
 
     let winnings = 0;
-    let resultMessage = '';
+    let outcomeBlock =
+      '╭──────────────────────────────╮\n' +
+      `│  🎰 Spin: ${spin.join(' | ')}   │\n`;
 
     if (spin[0] === spin[1] && spin[1] === spin[2]) {
       winnings = betAmount * 10;
       userData.balance += winnings;
-      resultMessage = 'Jackpot! You won 10x your bet!';
+      outcomeBlock +=
+        '│  **✨ CELESTIAL JACKPOT ✨**  │\n' +
+        `│  Reward: **${winnings}** (10x) │\n`;
     } else if (spin[0] === spin[1] || spin[1] === spin[2] || spin[0] === spin[2]) {
       winnings = betAmount * 2;
       userData.balance += winnings;
-      resultMessage = 'Nice! You won 2x your bet!';
+      outcomeBlock +=
+        '│  **⭐ BLESSED DOUBLE ⭐**     │\n' +
+        `│  Reward: **${winnings}** (2x)  │\n`;
     } else {
-      resultMessage = 'Sorry, you lost your bet.';
+      outcomeBlock +=
+        '│  **💔 FALLEN BET – YOU LOSE**│\n';
     }
+
+    outcomeBlock += '╰──────────────────────────────╯';
 
     // Persist to MongoDB – one argument, wrapper adds userId
     await saveUserData({ balance: userData.balance });
 
     const embed = new EmbedBuilder()
-      .setTitle('🎰 Slots Machine 🎰')
-      .addFields(
-        { name: 'Spin Result', value: spin.join(' | '), inline: false },
-        { name: 'Outcome', value: resultMessage, inline: false },
-        { name: 'Balance', value: userData.balance.toString(), inline: false }
+      .setTitle('˗ˏˋ 𐙚 🎰 𝔠𝔢𝔩𝔢𝔰𝔱𝔦𝔞𝔩 𝔖𝔩𝔬𝔱𝔰 𐙚 ˎˊ˗')
+      .setDescription(
+        [
+          '꒰ঌ the reels spin in the starlight ໒꒱',
+          '',
+          outcomeBlock,
+          '',
+          `💰 **New Balance:** ${userData.balance} coins`,
+        ].join('\n')
       )
-      .setColor(winnings > 0 ? '#00FF00' : '#FF0000')
-      .setTimestamp();
+      .setColor('#F5E6FF')
+      .setTimestamp()
+      .setFooter({ text: 'System • Angelic Casino ✧' });
 
     message.channel.send({ embeds: [embed] });
   },

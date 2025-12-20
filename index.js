@@ -199,7 +199,7 @@ client.on('messageCreate', async (message) => {
 
   // ===== RESTRICT KEY CHANNEL =====
   const KEYS_CHANNEL_ID = '1401925188991582338';
-  const allowedInKeysChannel = ['redeem', 'hangman', 'inventory', 'bal', 'baltop', 'claim'];
+  const allowedInKeysChannel = ['redeem', 'hangman', 'inventory', 'inv','bal', 'baltop', 'claim'];
 
   if (
     message.channel.id === KEYS_CHANNEL_ID &&

@@ -2,8 +2,6 @@ const { EmbedBuilder } = require('discord.js');
 
 const wheel = [
   { num: 0, color: 'green' },
-  // Sequence alternates but for simplicity just use these
-  // Actual casino wheels mix order but colors and odds are enough for this purpose:
   ...Array.from({ length: 36 }, (_, i) => ({
     num: i + 1,
     color: (i % 2 === 0 ? 'black' : 'red')
@@ -28,7 +26,6 @@ module.exports = {
     if (isNaN(bet) || bet <= 0)
       return message.channel.send('Bet must be a positive integer!');
 
-    // userData is already loaded from MongoDB by index.js
     if (typeof userData.balance !== 'number') userData.balance = 0;
 
     if (userData.balance < bet)
@@ -53,38 +50,57 @@ module.exports = {
     const result = spinWheel();
 
     let winnings = 0;
-    let desc = `Wheel Result: **${result.num} (${result.color})**\n`;
+    let resultBlock = 
+      '╭──────────────────────────────╮\n' +
+      `│  🎡 Result: **${result.num} (${result.color.toUpperCase()} )** │\n`;
 
     if (betType === 'number' && betNumber === result.num) {
       winnings = bet * 36;
       userData.balance += winnings;
-      desc += `🎉 Lucky number! You win **${winnings}** (36x bet)!`;
+      resultBlock +=
+        '│  **✨ CELESTIAL JACKPOT ✨**  │\n' +
+        `│  Reward: **${winnings}** (36x) │\n`;
     } else if (betType === 'red' && result.color === 'red') {
       winnings = bet * 2;
       userData.balance += winnings;
-      desc += `🟥 Red! You win **${winnings}** (2x bet)!`;
+      resultBlock +=
+        '│  **🟥 RED BLESSED WIN 🟥**    │\n' +
+        `│  Reward: **${winnings}** (2x)  │\n`;
     } else if (betType === 'black' && result.color === 'black') {
       winnings = bet * 2;
       userData.balance += winnings;
-      desc += `⬛ Black! You win **${winnings}** (2x bet)!`;
+      resultBlock +=
+        '│  **⬛ SHADOWED LUCK ⬛**      │\n' +
+        `│  Reward: **${winnings}** (2x)  │\n`;
     } else if (betType === 'green' && result.num === 0) {
       winnings = bet * 18;
       userData.balance += winnings;
-      desc += `🟩 Green zero! You win **${winnings}** (18x bet)!`;
+      resultBlock +=
+        '│  **🟩 DIVINE ZERO 🟩**       │\n' +
+        `│  Reward: **${winnings}** (18x) │\n`;
     } else {
-      desc += "You lost your bet.";
+      resultBlock +=
+        '│  **💔 FALLEN BET – YOU LOSE**│\n';
     }
+
+    resultBlock += '╰──────────────────────────────╯';
 
     // Persist to MongoDB – one argument, wrapper adds userId
     await saveUserData({ balance: userData.balance });
 
     const embed = new EmbedBuilder()
-      .setTitle('🎲 Roulette Spin 🎲')
-      .setDescription(desc)
-      .addFields(
-        { name: 'Your New Balance', value: userData.balance.toString(), inline: true }
+      .setTitle('˗ˏˋ 𐙚 🎡 𝔠𝔢𝔩𝔢𝔰𝔱𝔦𝔞𝔩 ℝ𝕠𝕦𝕝𝕖𝕥𝕥𝕖 𐙚 ˎˊ˗')
+      .setDescription(
+        [
+          '꒰ঌ spinning the heavenly wheel ໒꒱',
+          '',
+          resultBlock,
+          '',
+          `💰 **New Balance:** ${userData.balance} coins`
+        ].join('\n')
       )
-      .setColor(winnings > 0 ? "#00FF00" : "#FF0000")
+      .setColor('#F5E6FF')
+      .setFooter({ text: 'System • Angelic Casino ✧' })
       .setTimestamp();
 
     message.channel.send({ embeds: [embed] });

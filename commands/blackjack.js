@@ -50,7 +50,6 @@ module.exports = {
 
     activeGames.add(userId);
 
-    // Deduct bet and save
     userData.balance -= bet;
     await saveUserData({ balance: userData.balance });
 
@@ -60,15 +59,31 @@ module.exports = {
 
     function createEmbed(desc = '') {
       return new EmbedBuilder()
-        .setTitle('🃏 Blackjack 🃏')
+        .setTitle('˗ˏˋ 𐙚 🃏 𝔅𝔩𝔞𝔠𝔨𝔧𝔞𝔠𝔨 🃏 𐙚 ˎˊ˗')
         .addFields(
-          { name: 'Your Hand', value: playerHand.map(c => c.display).join(' '), inline: true },
-          { name: 'Dealer Hand', value: `${dealerHand[0].display} 🂠`, inline: true },
-          { name: 'Your Value', value: handValue(playerHand).toString(), inline: false }
+          {
+            name: '꒰ঌ Your Hand ໒꒱',
+            value: playerHand.map(c => c.display).join(' '),
+            inline: true
+          },
+          {
+            name: '꒰ঌ Dealer Hand ໒꒱',
+            value: `${dealerHand[0].display} 🂠`,
+            inline: true
+          },
+          {
+            name: '⭐ Your Value',
+            value: handValue(playerHand).toString(),
+            inline: false
+          }
         )
-        .setDescription(desc || 'React ✅ for Hit, ⏹️ for Stand.')
-        .setColor('#2222AA')
-        .setTimestamp();
+        .setDescription(
+          desc ||
+          'React ✅ to **Hit** or ⏹️ to **Stand**.\n\n꒰ঌ Try to reach **21** without busting ໒꒱'
+        )
+        .setColor('#F5E6FF')
+        .setTimestamp()
+        .setFooter({ text: 'System • Blackjack Table' });
     }
 
     const gameEmbed = createEmbed();
@@ -95,16 +110,20 @@ module.exports = {
           gameOver = true;
           collector.stop();
           const bustEmbed = createEmbed('💥 You busted! Dealer wins.');
-          bustEmbed.setColor('#FF0000');
+          bustEmbed.setColor('#FFB3C6');
           await statusMsg.edit({ embeds: [bustEmbed] });
           endGame();
         } else if (pVal === 21) {
           gameOver = true;
           collector.stop();
-          await statusMsg.edit({ embeds: [createEmbed('🎯 21! Standing automatically...')] });
+          await statusMsg.edit({
+            embeds: [createEmbed('🎯 **21!** Standing automatically...')]
+          });
           await dealerTurn();
         } else {
-          await statusMsg.edit({ embeds: [createEmbed('Hit! React again.')] });
+          await statusMsg.edit({
+            embeds: [createEmbed('✅ Hit registered! React again to draw another card.')]
+          });
         }
       } else if (reaction.emoji.name === '⏹️') {
         gameOver = true;
@@ -133,38 +152,52 @@ module.exports = {
 
       if (pVal > 21) {
         result = '💥 You busted! Dealer wins.';
-        color = '#FF0000';
+        color = '#FFB3C6';
       } else if (dVal > 21) {
         userData.balance += bet * 2;
         await saveUserData({ balance: userData.balance });
         result = `🎉 Dealer busted! You win **${bet * 2}** coins!`;
-        color = '#00FF00';
+        color = '#C1FFD7';
       } else if (pVal > dVal) {
         userData.balance += bet * 2;
         await saveUserData({ balance: userData.balance });
         result = `🎉 You beat the dealer! You win **${bet * 2}** coins!`;
-        color = '#00FF00';
+        color = '#C1FFD7';
       } else if (pVal === dVal) {
         userData.balance += bet;
         await saveUserData({ balance: userData.balance });
-        result = '🤝 Push! Bet returned.';
+        result = '🤝 Push! Your bet has been returned.';
+        color = '#F5E6FF';
       } else {
         result = '😔 Dealer wins!';
-        color = '#FF0000';
+        color = '#FFB3C6';
       }
 
       const finalEmbed = new EmbedBuilder()
-        .setTitle('🃏 Blackjack Result 🃏')
+        .setTitle('˗ˏˋ 𐙚 🃏 𝔅𝔩𝔞𝔠𝔨𝔧𝔞𝔠𝔨 ℝ𝕖𝕤𝕦𝕝𝕥 🃏 𐙚 ˎˊ˗')
         .addFields(
-          { name: 'Your Hand', value: playerHand.map(c => c.display).join(' '), inline: true },
-          { name: 'Dealer Hand', value: dealerHand.map(c => c.display).join(' '), inline: true },
-          { name: 'Your Value', value: pVal.toString(), inline: true },
-          { name: 'Dealer Value', value: dVal.toString(), inline: true },
-          { name: 'New Balance', value: userData.balance.toString(), inline: false }
+          {
+            name: '꒰ঌ Your Hand ໒꒱',
+            value: playerHand.map(c => c.display).join(' '),
+            inline: true
+          },
+          {
+            name: '꒰ঌ Dealer Hand ໒꒱',
+            value: dealerHand.map(c => c.display).join(' '),
+            inline: true
+          },
+          { name: '⭐ Your Value', value: pVal.toString(), inline: true },
+          { name: '🂠 Dealer Value', value: dVal.toString(), inline: true },
+          {
+            name: '💰 New Balance',
+            value: userData.balance.toString(),
+            inline: false
+          }
         )
         .setDescription(result)
         .setColor(color)
-        .setTimestamp();
+        .setTimestamp()
+        .setFooter({ text: 'System • Blackjack Table' });
 
       await message.channel.send({ embeds: [finalEmbed] });
       endGame();

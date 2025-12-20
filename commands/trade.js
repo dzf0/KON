@@ -24,7 +24,7 @@ module.exports = {
 
     // START TRADE - check if first arg is a mention OR if sub is 'start'
     const targetUser = message.mentions.users.first();
-    
+
     if (targetUser || sub === 'start') {
       if (!targetUser) {
         return message.channel.send('Usage: `.trade @user` to start a trade');
@@ -55,26 +55,37 @@ module.exports = {
         partnerOffer: { currency: 0, items: {} },
         initiatorConfirmed: false,
         partnerConfirmed: false,
-        status: 'open'
+        status: 'open',
       });
 
       activeTrades.set(targetUser.id, activeTrades.get(userId));
 
+      const headerBlock =
+        '╭──────────────────────────────╮\n' +
+        '│        Trade Started        │\n' +
+        '╰──────────────────────────────╯';
+
       const embed = new EmbedBuilder()
-        .setTitle('🤝 Trade Initiated')
+        .setTitle('˗ˏˋ 𐙚 🤝 Trade Session 𐙚 ˎˊ˗')
         .setDescription(
-          `${message.author} wants to trade with ${targetUser}!\n\n` +
-          `**Commands:**\n` +
-          `\`.trade offer currency <amount>\` - Offer coins\n` +
-          `\`.trade offer item <item name> <amount>\` - Offer inventory items\n` +
-          `\`.trade remove currency <amount>\` - Remove coins from offer\n` +
-          `\`.trade remove item <item name> <amount>\` - Remove items from offer\n` +
-          `\`.trade view\` - View current offers\n` +
-          `\`.trade confirm\` - Confirm your side\n` +
-          `\`.trade cancel\` - Cancel trade`
+          [
+            headerBlock,
+            '',
+            `${message.author} wants to trade with ${targetUser}.`,
+            '',
+            '**Commands:**',
+            '`.trade offer currency <amount>` - Offer coins',
+            '`.trade offer item <item name> <amount>` - Offer inventory items',
+            '`.trade remove currency <amount>` - Remove coins from offer',
+            '`.trade remove item <item name> <amount>` - Remove items from offer',
+            '`.trade view` - View current offers',
+            '`.trade confirm` - Confirm your side',
+            '`.trade cancel` - Cancel trade',
+          ].join('\n')
         )
-        .setColor('#FFD700')
-        .setTimestamp();
+        .setColor('#F5E6FF')
+        .setTimestamp()
+        .setFooter({ text: 'System • Trading Desk' });
 
       return message.channel.send({ embeds: [embed] });
     }
@@ -82,16 +93,16 @@ module.exports = {
     // Check if user has active trade
     const trade = activeTrades.get(userId);
     if (!trade) {
-      return message.channel.send('❌ You don\'t have an active trade. Use `.trade @user` to start one.');
+      return message.channel.send("❌ You don't have an active trade. Use `.trade @user` to start one.");
     }
 
     // OFFER CURRENCY OR ITEMS
     if (sub === 'offer') {
       const offerType = args[1]?.toLowerCase();
-      
+
       if (offerType === 'currency') {
         const amount = parseInt(args[2]);
-        
+
         if (isNaN(amount) || amount <= 0) {
           return message.channel.send('❌ Please specify a valid positive amount.');
         }
@@ -102,14 +113,16 @@ module.exports = {
 
         const isInitiator = userId === trade.initiator;
         const offer = isInitiator ? trade.initiatorOffer : trade.partnerOffer;
-        
+
         offer.currency += amount;
 
         // Reset confirmations
         trade.initiatorConfirmed = false;
         trade.partnerConfirmed = false;
 
-        return message.channel.send(`✅ Added **${amount}** coins to your offer. Total: **${offer.currency}** coins`);
+        return message.channel.send(
+          `✅ Added **${amount}** coins to your offer. Total: **${offer.currency}** coins`
+        );
       }
 
       if (offerType === 'item') {
@@ -134,9 +147,11 @@ module.exports = {
 
         // Find actual item name in inventory (case-insensitive)
         const actualItemName = findInventoryItem(userData.inventory, itemNameInput);
-        
+
         if (!actualItemName) {
-          return message.channel.send(`❌ You don't have any item called **${itemNameInput}** in your inventory.`);
+          return message.channel.send(
+            `❌ You don't have any item called **${itemNameInput}** in your inventory.`
+          );
         }
 
         const userItems = userData.inventory[actualItemName] || 0;
@@ -146,8 +161,7 @@ module.exports = {
 
         if (userItems < alreadyOffered + amount) {
           return message.channel.send(
-            `❌ You don't have enough **${actualItemName}**! ` +
-            `You have: ${userItems}, Already offered: ${alreadyOffered}`
+            `❌ You don't have enough **${actualItemName}**. You have: ${userItems}, already offered: ${alreadyOffered}.`
           );
         }
 
@@ -162,23 +176,25 @@ module.exports = {
         );
       }
 
-      return message.channel.send('Usage: `.trade offer currency <amount>` or `.trade offer item <item name> <amount>`');
+      return message.channel.send(
+        'Usage: `.trade offer currency <amount>` or `.trade offer item <item name> <amount>`'
+      );
     }
 
     // REMOVE FROM OFFER
     if (sub === 'remove') {
       const removeType = args[1]?.toLowerCase();
-      
+
       if (removeType === 'currency') {
         const amount = parseInt(args[2]);
-        
+
         if (isNaN(amount) || amount <= 0) {
           return message.channel.send('❌ Please specify a valid positive amount.');
         }
 
         const isInitiator = userId === trade.initiator;
         const offer = isInitiator ? trade.initiatorOffer : trade.partnerOffer;
-        
+
         if (offer.currency < amount) {
           return message.channel.send(`❌ You only offered ${offer.currency} coins.`);
         }
@@ -189,7 +205,9 @@ module.exports = {
         trade.initiatorConfirmed = false;
         trade.partnerConfirmed = false;
 
-        return message.channel.send(`✅ Removed **${amount}** coins from your offer. Remaining: **${offer.currency}** coins`);
+        return message.channel.send(
+          `✅ Removed **${amount}** coins from your offer. Remaining: **${offer.currency}** coins`
+        );
       }
 
       if (removeType === 'item') {
@@ -244,10 +262,14 @@ module.exports = {
         trade.initiatorConfirmed = false;
         trade.partnerConfirmed = false;
 
-        return message.channel.send(`✅ Removed **${amount} ${actualItemName}** from your offer.`);
+        return message.channel.send(
+          `✅ Removed **${amount} ${actualItemName}** from your offer.`
+        );
       }
 
-      return message.channel.send('Usage: `.trade remove currency <amount>` or `.trade remove item <item name> <amount>`');
+      return message.channel.send(
+        'Usage: `.trade remove currency <amount>` or `.trade remove item <item name> <amount>`'
+      );
     }
 
     // VIEW TRADE
@@ -255,31 +277,45 @@ module.exports = {
       const initiator = await client.users.fetch(trade.initiator);
       const partner = await client.users.fetch(trade.partner);
 
-      const initiatorItems = Object.entries(trade.initiatorOffer.items)
-        .map(([k, v]) => `${v}x ${k}`)
-        .join(', ') || 'None';
-      
-      const partnerItems = Object.entries(trade.partnerOffer.items)
-        .map(([k, v]) => `${v}x ${k}`)
-        .join(', ') || 'None';
+      const initiatorItems =
+        Object.entries(trade.initiatorOffer.items)
+          .map(([k, v]) => `${v}x ${k}`)
+          .join(', ') || 'None';
+
+      const partnerItems =
+        Object.entries(trade.partnerOffer.items)
+          .map(([k, v]) => `${v}x ${k}`)
+          .join(', ') || 'None';
+
+      const offerBlock =
+        '╭──────────────────────────────╮\n' +
+        '│      Current Trade View      │\n' +
+        '╰──────────────────────────────╯';
 
       const embed = new EmbedBuilder()
-        .setTitle('🤝 Current Trade Offers')
+        .setTitle('˗ˏˋ 𐙚 🤝 Trade Overview 𐙚 ˎˊ˗')
+        .setDescription(
+          [
+            offerBlock,
+            '',
+            'Both players must confirm with `.trade confirm` to finish the trade.',
+          ].join('\n')
+        )
         .addFields(
           {
             name: `${initiator.username}'s Offer ${trade.initiatorConfirmed ? '✅' : '❌'}`,
-            value: `**Currency:** ${trade.initiatorOffer.currency} coins\n**Items:** ${initiatorItems}`,
-            inline: false
+            value: `**Coins:** ${trade.initiatorOffer.currency}\n**Items:** ${initiatorItems}`,
+            inline: false,
           },
           {
             name: `${partner.username}'s Offer ${trade.partnerConfirmed ? '✅' : '❌'}`,
-            value: `**Currency:** ${trade.partnerOffer.currency} coins\n**Items:** ${partnerItems}`,
-            inline: false
+            value: `**Coins:** ${trade.partnerOffer.currency}\n**Items:** ${partnerItems}`,
+            inline: false,
           }
         )
-        .setDescription('Both parties must confirm with `.trade confirm` to complete the trade.')
-        .setColor('#FFD700')
-        .setTimestamp();
+        .setColor('#F5E6FF')
+        .setTimestamp()
+        .setFooter({ text: 'System • Trading Desk' });
 
       return message.channel.send({ embeds: [embed] });
     }
@@ -287,7 +323,7 @@ module.exports = {
     // CONFIRM TRADE
     if (sub === 'confirm') {
       const isInitiator = userId === trade.initiator;
-      
+
       if (isInitiator) {
         trade.initiatorConfirmed = true;
       } else {
@@ -295,7 +331,9 @@ module.exports = {
       }
 
       if (!trade.initiatorConfirmed || !trade.partnerConfirmed) {
-        return message.channel.send(`✅ ${message.author.username} confirmed! Waiting for other party...`);
+        return message.channel.send(
+          `✅ ${message.author.username} confirmed. Waiting for the other person to confirm.`
+        );
       }
 
       // Both confirmed - execute trade
@@ -306,13 +344,17 @@ module.exports = {
       if (initiatorData.balance < trade.initiatorOffer.currency) {
         activeTrades.delete(trade.initiator);
         activeTrades.delete(trade.partner);
-        return message.channel.send('❌ Trade failed! Initiator doesn\'t have enough currency.');
+        return message.channel.send(
+          "❌ Trade failed. Initiator doesn't have enough coins anymore."
+        );
       }
 
       if (partnerData.balance < trade.partnerOffer.currency) {
         activeTrades.delete(trade.initiator);
         activeTrades.delete(trade.partner);
-        return message.channel.send('❌ Trade failed! Partner doesn\'t have enough currency.');
+        return message.channel.send(
+          "❌ Trade failed. Partner doesn't have enough coins anymore."
+        );
       }
 
       // Validate items
@@ -320,7 +362,9 @@ module.exports = {
         if ((initiatorData.inventory?.[itemName] || 0) < amount) {
           activeTrades.delete(trade.initiator);
           activeTrades.delete(trade.partner);
-          return message.channel.send(`❌ Trade failed! Initiator doesn't have enough ${itemName}.`);
+          return message.channel.send(
+            `❌ Trade failed. Initiator doesn't have enough ${itemName}.`
+          );
         }
       }
 
@@ -328,7 +372,9 @@ module.exports = {
         if ((partnerData.inventory?.[itemName] || 0) < amount) {
           activeTrades.delete(trade.initiator);
           activeTrades.delete(trade.partner);
-          return message.channel.send(`❌ Trade failed! Partner doesn't have enough ${itemName}.`);
+          return message.channel.send(
+            `❌ Trade failed. Partner doesn't have enough ${itemName}.`
+          );
         }
       }
 
@@ -339,20 +385,24 @@ module.exports = {
       // Transfer currency
       initiatorData.balance -= trade.initiatorOffer.currency;
       initiatorData.balance += trade.partnerOffer.currency;
-      
+
       partnerData.balance -= trade.partnerOffer.currency;
       partnerData.balance += trade.initiatorOffer.currency;
 
       // Transfer items from initiator to partner
       for (const [itemName, amount] of Object.entries(trade.initiatorOffer.items)) {
-        initiatorData.inventory[itemName] = (initiatorData.inventory[itemName] || 0) - amount;
-        partnerData.inventory[itemName] = (partnerData.inventory[itemName] || 0) + amount;
+        initiatorData.inventory[itemName] =
+          (initiatorData.inventory[itemName] || 0) - amount;
+        partnerData.inventory[itemName] =
+          (partnerData.inventory[itemName] || 0) + amount;
       }
 
       // Transfer items from partner to initiator
       for (const [itemName, amount] of Object.entries(trade.partnerOffer.items)) {
-        partnerData.inventory[itemName] = (partnerData.inventory[itemName] || 0) - amount;
-        initiatorData.inventory[itemName] = (initiatorData.inventory[itemName] || 0) + amount;
+        partnerData.inventory[itemName] =
+          (partnerData.inventory[itemName] || 0) - amount;
+        initiatorData.inventory[itemName] =
+          (initiatorData.inventory[itemName] || 0) + amount;
       }
 
       // Clean up zero entries
@@ -366,9 +416,8 @@ module.exports = {
       if (userId === trade.initiator) {
         await saveUserData({
           balance: initiatorData.balance,
-          inventory: initiatorData.inventory
+          inventory: initiatorData.inventory,
         });
-        // Use MongoDB helper for partner
         const User = require('mongoose').model('User');
         await User.updateOne(
           { userId: trade.partner },
@@ -377,9 +426,8 @@ module.exports = {
       } else {
         await saveUserData({
           balance: partnerData.balance,
-          inventory: partnerData.inventory
+          inventory: partnerData.inventory,
         });
-        // Use MongoDB helper for initiator
         const User = require('mongoose').model('User');
         await User.updateOne(
           { userId: trade.initiator },
@@ -390,11 +438,23 @@ module.exports = {
       const initiator = await client.users.fetch(trade.initiator);
       const partner = await client.users.fetch(trade.partner);
 
+      const doneBlock =
+        '╭──────────────────────────────╮\n' +
+        '│        Trade Complete        │\n' +
+        '╰──────────────────────────────╯';
+
       const embed = new EmbedBuilder()
-        .setTitle('✅ Trade Completed!')
-        .setDescription(`Trade between ${initiator} and ${partner} completed successfully!`)
-        .setColor('#00FF00')
-        .setTimestamp();
+        .setTitle('˗ˏˋ 𐙚 ✅ Trade Completed 𐙚 ˎˊ˗')
+        .setDescription(
+          [
+            doneBlock,
+            '',
+            `Trade between ${initiator} and ${partner} finished successfully.`,
+          ].join('\n')
+        )
+        .setColor('#C1FFD7')
+        .setTimestamp()
+        .setFooter({ text: 'System • Trading Desk' });
 
       message.channel.send({ embeds: [embed] });
 
@@ -411,11 +471,23 @@ module.exports = {
       activeTrades.delete(trade.initiator);
       activeTrades.delete(trade.partner);
 
+      const cancelBlock =
+        '╭──────────────────────────────╮\n' +
+        '│         Trade Cancelled      │\n' +
+        '╰──────────────────────────────╯';
+
       const embed = new EmbedBuilder()
-        .setTitle('❌ Trade Cancelled')
-        .setDescription(`Trade between ${initiator} and ${partner} was cancelled.`)
-        .setColor('#FF0000')
-        .setTimestamp();
+        .setTitle('˗ˏˋ 𐙚 ❌ Trade Cancelled 𐙚 ˎˊ˗')
+        .setDescription(
+          [
+            cancelBlock,
+            '',
+            `Trade between ${initiator} and ${partner} was cancelled.`,
+          ].join('\n')
+        )
+        .setColor('#FFB3C6')
+        .setTimestamp()
+        .setFooter({ text: 'System • Trading Desk' });
 
       return message.channel.send({ embeds: [embed] });
     }
@@ -423,14 +495,14 @@ module.exports = {
     // Default help
     return message.channel.send(
       '**Trade Commands:**\n' +
-      '`.trade @user` - Start trade\n' +
-      '`.trade offer currency <amount>` - Offer coins\n' +
-      '`.trade offer item <item name> <amount>` - Offer any inventory item\n' +
-      '`.trade remove currency <amount>` - Remove coins\n' +
-      '`.trade remove item <item name> <amount>` - Remove items\n' +
-      '`.trade view` - View offers\n' +
-      '`.trade confirm` - Confirm trade\n' +
-      '`.trade cancel` - Cancel trade'
+        '`.trade @user` - Start trade\n' +
+        '`.trade offer currency <amount>` - Offer coins\n' +
+        '`.trade offer item <item name> <amount>` - Offer any inventory item\n' +
+        '`.trade remove currency <amount>` - Remove coins\n' +
+        '`.trade remove item <item name> <amount>` - Remove items\n' +
+        '`.trade view` - View offers\n' +
+        '`.trade confirm` - Confirm trade\n' +
+        '`.trade cancel` - Cancel trade'
     );
-  }
+  },
 };

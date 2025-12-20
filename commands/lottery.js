@@ -1,6 +1,6 @@
 const { EmbedBuilder } = require('discord.js');
 
-const LOTTERY_PRICE = 100; // Ticket price
+const LOTTERY_PRICE = 500; // Ticket price
 const LOTTERY_DRAW_ROLE_ID = '1382513369801555988'; // Replace with your role ID
 
 // Use a global object to store lottery state in memory
@@ -23,7 +23,7 @@ module.exports = {
     const getUserTicketCount = (id) =>
       lotteryState.tickets.filter(uid => uid === id).length;
 
-    if (sub === "buy") {
+    if (sub === 'buy') {
       const currentTickets = getUserTicketCount(userId);
       if (currentTickets >= 5) {
         return message.channel.send('❌ You already own the maximum of **5** lottery tickets.');
@@ -41,33 +41,39 @@ module.exports = {
       await saveUserData({ balance: userData.balance });
 
       const boughtEmbed = new EmbedBuilder()
-        .setTitle("🎟️ Lottery Ticket Bought!")
-        .setDescription(`You bought a ticket for **${LOTTERY_PRICE}**!\nYou now have **${currentTickets + 1}/5** tickets.`)
-        .addFields(
-          { name: 'Total Pot', value: lotteryState.pot.toString(), inline: true },
-          { name: 'Total Tickets', value: lotteryState.tickets.length.toString(), inline: true }
+        .setTitle('˗ˏˋ 𐙚 🎟️ 𝔏𝔬𝔱𝔱𝔢𝔯𝔶 𝔗𝔦𝔠𝔨𝔢𝔱 𝔅𝔬𝔲𝔤𝔥𝔱! 𐙚 ˎˊ˗')
+        .setDescription(
+          [
+            `You spent **${LOTTERY_PRICE}** coins on a celestial ticket.`,
+            `You now have **${currentTickets + 1}/5** tickets.`
+          ].join('\n')
         )
-        .setColor('#00AAFF')
+        .addFields(
+          { name: '💰 Total Pot', value: `**${lotteryState.pot}** coins`, inline: true },
+          { name: '🎫 Tickets Sold', value: `**${lotteryState.tickets.length}**`, inline: true }
+        )
+        .setColor('#F5E6FF')
         .setTimestamp();
+
       return message.channel.send({ embeds: [boughtEmbed] });
     }
 
-    if (sub === "status") {
+    if (sub === 'status') {
       const pot = lotteryState.pot;
       const tickets = lotteryState.tickets.length;
       const embed = new EmbedBuilder()
-        .setTitle("🎰 Lottery Status")
-        .setDescription("Pot and ticket count so far.")
+        .setTitle('˗ˏˋ 𐙚 🎰 𝔏𝔬𝔱𝔱𝔢𝔯𝔶 𝔖𝔱𝔞𝔱𝔲𝔰 𐙚 ˎˊ˗')
+        .setDescription('꒰ঌ current celestial pot & ticket count ໒꒱')
         .addFields(
-          { name: 'Total Pot', value: pot.toString(), inline: true },
-          { name: 'Tickets Sold', value: tickets.toString(), inline: true }
+          { name: '💰 Total Pot', value: `**${pot}** coins`, inline: true },
+          { name: '🎫 Tickets Sold', value: `**${tickets}**`, inline: true }
         )
-        .setColor('#FFD700')
+        .setColor('#F5E6FF')
         .setTimestamp();
       return message.channel.send({ embeds: [embed] });
     }
 
-    if (sub === "draw") {
+    if (sub === 'draw') {
       // Check if the user has the specific role
       if (!message.member.roles.cache.has(LOTTERY_DRAW_ROLE_ID)) {
         return message.channel.send('❌ You do not have permission to draw the lottery. Only authorized users can do this.');
@@ -83,18 +89,21 @@ module.exports = {
 
       // Award winnings to winner
       if (winnerId === userId) {
-        // Winner is the current user – use one-argument form
         userData.balance += lotteryState.pot;
         await saveUserData({ balance: userData.balance });
       } else {
-        // Winner is someone else - use updateUserBalance to update them
         await updateUserBalance(winnerId, lotteryState.pot);
       }
 
       const winnerEmbed = new EmbedBuilder()
-        .setTitle("🎉 Lottery Drawn! 🎉")
-        .setDescription(`<@${winnerId}> wins the pot of **${lotteryState.pot}**! Congratulations!`)
-        .setColor('#00FF00')
+        .setTitle('˗ˏˋ 𐙚 🎉 𝔏𝔬𝔱𝔱𝔢𝔯𝔶 𝔇𝔯𝔞𝔴𝔫! 𐙚 ˎˊ˗')
+        .setDescription(
+          [
+            `✨ <@${winnerId}> has been blessed by the celestial raffle!`,
+            `They win the entire pot of **${lotteryState.pot}** coins.`
+          ].join('\n')
+        )
+        .setColor('#C1FFD7')
         .setTimestamp();
 
       // Reset state
@@ -106,7 +115,7 @@ module.exports = {
 
     // Default error/help
     return message.channel.send(
-      `Usage: \`.lottery buy\` to buy ticket (${LOTTERY_PRICE}, max 5 per user), \`.lottery status\` to check, \`.lottery draw\` (authorized users only)`
+      `Usage: \`.lottery buy\` to buy a ticket (**${LOTTERY_PRICE}** coins, max 5 per user), \`.lottery status\` to check the pot, \`.lottery draw\` (authorized users only)`
     );
   }
 };

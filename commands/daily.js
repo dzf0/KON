@@ -19,14 +19,17 @@ module.exports = {
       const secondsLeft = Math.floor((timeLeft % (60 * 1000)) / 1000);
 
       const embed = new EmbedBuilder()
-        .setTitle('⏰ Daily Reward on Cooldown')
+        .setTitle('˗ˏˋ 𐙚 ⏰ 𝔇𝔞𝔦𝔩𝔶 𝔬𝔫 ℭ𝔬𝔬𝔩𝔡𝔬𝔴𝔫 𐙚 ˎˊ˗')
         .setDescription(
-          `You've already claimed your daily reward!\n\n` +
-          `**Time until next claim:**\n` +
-          `${hoursLeft}h ${minutesLeft}m ${secondsLeft}s`
+          [
+            'You\'ve already claimed your daily reward today!',
+            '',
+            '꒰ঌ **Time until next claim:** ໒꒱',
+            `> ${hoursLeft}h ${minutesLeft}m ${secondsLeft}s`
+          ].join('\n')
         )
-        .setColor('#FF6B6B')
-        .setFooter({ text: 'Come back later!' })
+        .setColor('#FFB3C6')
+        .setFooter({ text: 'Come back a little later, celestial saver ✧' })
         .setTimestamp();
 
       return message.channel.send({ embeds: [embed] });
@@ -42,13 +45,18 @@ module.exports = {
     });
 
     const embed = new EmbedBuilder()
-      .setTitle('🎁 Daily Reward Claimed!')
+      .setTitle('˗ˏˋ 𐙚 🎁 𝔇𝔞𝔦𝔩𝔶 ℛ𝕖𝕨𝕒𝕣𝕕 𝔠𝔩𝔞𝔦𝔪𝔢𝔡! 𐙚 ˎˊ˗')
       .setDescription(
-        `You received **${DAILY_REWARD}** coins!\n\n` +
-        `**New Balance:** ${userData.balance} coins`
+        [
+          `You received **${DAILY_REWARD}** coins!`,
+          '',
+          `💰 **New Balance:** ${userData.balance} coins`,
+          '',
+          '꒰ঌ Come back in **24 hours** for another little gift ໒꒱'
+        ].join('\n')
       )
-      .setColor('#00FF00')
-      .setFooter({ text: 'Come back in 24 hours for another reward!' })
+      .setColor('#C1FFD7')
+      .setFooter({ text: 'System • Daily Rewards' })
       .setTimestamp();
 
     return message.channel.send({ embeds: [embed] });

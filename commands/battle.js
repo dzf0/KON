@@ -46,7 +46,6 @@ function calculateDamage(moveDamage) {
     'Varies': { min: 90, max: 130 }
   };
 
-  // Check if damage tier contains A or S
   const damageStr = String(moveDamage).toUpperCase();
   if (damageStr.includes('S') || damageStr.includes('A')) {
     const range = damageMap['A'] || { min: 80, max: 100 };
@@ -68,7 +67,6 @@ function getMoveUsageLimit(moveDamage) {
   const limit = moveUsageLimits[moveDamage];
   if (limit) return limit;
 
-  // For custom tiers, check if they contain S or A
   const damageStr = String(moveDamage).toUpperCase();
   if (damageStr.includes('S+')) return 2;
   if (damageStr.includes('S')) return 4;
@@ -77,7 +75,7 @@ function getMoveUsageLimit(moveDamage) {
   if (damageStr.includes('C')) return 20;
   if (damageStr.includes('D')) return 25;
 
-  return 999; // default unlimited
+  return 999;
 }
 
 // Initialize character for battle with move tracking
@@ -122,20 +120,17 @@ module.exports = {
         return message.channel.send('❌ There is already an active battle in this channel!');
       }
 
-      // Check if challenger has characters
       const challengerChars = userData.characters || [];
       if (challengerChars.length === 0) {
         return message.channel.send('❌ You don\'t have any characters! Use `.roll` to get some.');
       }
 
-      // Check opponent's characters
       const opponentData = await getUserData(opponent.id);
       const opponentChars = opponentData.characters || [];
       if (opponentChars.length === 0) {
         return message.channel.send(`❌ ${opponent.username} doesn't have any characters!`);
       }
 
-      // Create battle state
       const battleState = {
         challenger: message.author.id,
         opponent: opponent.id,
@@ -151,18 +146,18 @@ module.exports = {
       activeBattles.set(message.channel.id, battleState);
 
       const embed = new EmbedBuilder()
-        .setTitle('⚔️ Battle Challenge!')
+        .setTitle('˗ˏˋ 𐙚 ⚔️ 𝔅𝔞𝔱𝔱𝔩𝔢 ℭ𝔥𝔞𝔩𝔩𝔢𝔫𝔤𝔢! 𐙚 ˎˊ˗')
         .setDescription(
           `${message.author} has challenged ${opponent} to a battle!\n\n` +
-          `Both players must select up to **4 characters** for their team.\n\n` +
-          `**Commands:**\n` +
-          `\`.battle add <character name>\` - Add character to team\n` +
-          `\`.battle remove <character name>\` - Remove character from team\n` +
-          `\`.battle team\` - View your team\n` +
-          `\`.battle ready\` - Confirm team (both must be ready)\n` +
-          `\`.battle cancel\` - Cancel battle`
+          '꒰ঌ Both players may choose up to **4 characters** for their team ໒꒱\n\n' +
+          '**Commands:**\n' +
+          '`.battle add <character name>` - Add character to team\n' +
+          '`.battle remove <character name>` - Remove character from team\n' +
+          '`.battle team` - View your team\n' +
+          '`.battle ready` - Confirm team (both must be ready)\n' +
+          '`.battle cancel` - Cancel battle'
         )
-        .setColor('#FF4500')
+        .setColor('#F5E6FF')
         .setTimestamp();
 
       return message.channel.send({ embeds: [embed] });
@@ -188,7 +183,6 @@ module.exports = {
         return message.channel.send('❌ Battle has already started!');
       }
 
-      // Parse character name with spaces - everything after 'add'
       const charName = args.slice(1).join(' ').trim();
       if (!charName) {
         return message.channel.send('Usage: `.battle add <character name>`');
@@ -199,7 +193,6 @@ module.exports = {
         return message.channel.send('❌ Your team is full! Maximum 4 characters.');
       }
 
-      // Find character (case-insensitive)
       const chars = userData.characters || [];
       const char = chars.find(c => c.name.toLowerCase().trim() === charName.toLowerCase().trim());
 
@@ -207,7 +200,6 @@ module.exports = {
         return message.channel.send(`❌ You don't own **${charName}**.`);
       }
 
-      // Check if already in team
       if (myTeam.some(c => c.name.toLowerCase() === charName.toLowerCase())) {
         return message.channel.send(`❌ **${char.name}** is already in your team!`);
       }
@@ -223,7 +215,6 @@ module.exports = {
         return message.channel.send('❌ Battle has already started!');
       }
 
-      // Parse character name with spaces
       const charName = args.slice(1).join(' ').trim();
       if (!charName) {
         return message.channel.send('Usage: `.battle remove <character name>`');
@@ -248,15 +239,15 @@ module.exports = {
         return message.channel.send('❌ Your team is empty! Use `.battle add <character name>`');
       }
 
-      const teamList = myTeam.map((c, i) => 
+      const teamList = myTeam.map((c, i) =>
         `${i + 1}. **${c.name}** (${c.tier}) - HP: ${c.currentHealth}/${c.maxHealth}`
       ).join('\n');
 
       const embed = new EmbedBuilder()
-        .setTitle(`${message.author.username}'s Team`)
+        .setTitle(`˗ˏˋ 𐙚 ${message.author.username}'𝕤 𝕋𝕖𝕒𝕞 𐙚 ˎˊ˗`)
         .setDescription(teamList)
-        .setColor('#00BFFF')
-        .setFooter({ text: `${myTeam.length}/4 characters` })
+        .setColor('#F5E6FF')
+        .setFooter({ text: `${myTeam.length}/4 characters selected` })
         .setTimestamp();
 
       return message.channel.send({ embeds: [embed] });
@@ -282,7 +273,6 @@ module.exports = {
 
       message.channel.send(`✅ ${message.author.username} is ready!`);
 
-      // Check if both ready
       if (battle.challengerReady && battle.opponentReady) {
         battle.status = 'active';
         battle.turn = battle.challenger;
@@ -292,30 +282,29 @@ module.exports = {
         const opponent = await message.client.users.fetch(battle.opponent);
 
         const startEmbed = new EmbedBuilder()
-          .setTitle('⚔️ Battle Start!')
+          .setTitle('˗ˏˋ 𐙚 ⚔️ 𝔅𝔞𝔱𝔱𝔩𝔢 𝔖𝔱𝔞𝔯𝔱! 𐙚 ˎˊ˗')
           .setDescription(
             `${challenger.username} vs ${opponent.username}\n\n` +
             `**Round 1**\n` +
-            `${challenger.username}'s turn!`
+            `꒰ঌ ${challenger.username}'s turn begins! ໒꒱`
           )
-          .setColor('#FFD700')
+          .setColor('#F5E6FF')
           .setTimestamp();
 
         await message.channel.send({ embeds: [startEmbed] });
 
-        // Show current character and moves with usage
         const currentChar = battle.challengerTeam[0];
-        const movesList = currentChar.moves.map((m, i) => 
+        const movesList = currentChar.moves.map((m, i) =>
           `${i + 1}. **${m.name}** (${m.damage}) - ${m.usesRemaining}/${m.maxUses} uses`
         ).join('\n');
 
         const moveEmbed = new EmbedBuilder()
-          .setTitle(`${currentChar.name} - HP: ${currentChar.currentHealth}/${currentChar.maxHealth}`)
+          .setTitle(`⭐ ${currentChar.name} - HP: ${currentChar.currentHealth}/${currentChar.maxHealth}`)
           .setDescription(
             `**Choose your move:**\n${movesList}\n\n` +
-            `Type \`.battle attack <move number>\` to attack!`
+            'Type `.battle attack <move number>` to attack!'
           )
-          .setColor('#00FF00')
+          .setColor('#C1FFD7')
           .setTimestamp();
 
         return message.channel.send({ embeds: [moveEmbed] });
@@ -342,7 +331,6 @@ module.exports = {
       const attackerTeam = isChallenger ? battle.challengerTeam : battle.opponentTeam;
       const defenderTeam = isChallenger ? battle.opponentTeam : battle.challengerTeam;
 
-      // Find first alive attacker
       const attacker = attackerTeam.find(c => c.currentHealth > 0);
       if (!attacker) {
         return message.channel.send('❌ All your characters are defeated!');
@@ -354,71 +342,62 @@ module.exports = {
 
       const move = attacker.moves[moveNum - 1];
 
-      // Check if move has uses left
       if (move.usesRemaining <= 0) {
         return message.channel.send(`❌ **${move.name}** has no uses left! Choose another move.`);
       }
 
-      // Find first alive defender
       const defender = defenderTeam.find(c => c.currentHealth > 0);
       if (!defender) {
-        // Battle over
         const winner = await message.client.users.fetch(userId);
         const loser = await message.client.users.fetch(isChallenger ? battle.opponent : battle.challenger);
 
         activeBattles.delete(message.channel.id);
 
         const winEmbed = new EmbedBuilder()
-          .setTitle('🏆 Battle Ended!')
-          .setDescription(`${winner} wins the battle against ${loser}!`)
-          .setColor('#FFD700')
+          .setTitle('˗ˏˋ 𐙚 🏆 𝔅𝔞𝔱𝔱𝔩𝔢 𝔈𝔫𝔡𝔢𝔡! 𐙚 ˎˊ˗')
+          .setDescription(`${winner} gracefully triumphs over ${loser}!`)
+          .setColor('#F5E6FF')
           .setTimestamp();
 
         return message.channel.send({ embeds: [winEmbed] });
       }
 
-      // Decrease move usage
       move.usesRemaining--;
 
-      // Check if attack is dodged
       const isDodged = checkDodge();
 
       let actionEmbed;
 
       if (isDodged) {
-        // Dodge message
         actionEmbed = new EmbedBuilder()
-          .setTitle(`${attacker.name} used ${move.name}!`)
+          .setTitle(`⭐ ${attacker.name} used ${move.name}!`)
           .setDescription(
-            `🛡️ **${defender.name} DODGED THE ATTACK!**\n\n` +
+            `🪽 **${defender.name} DODGED THE ATTACK!**\n\n` +
             `**${defender.name}** - HP: ${defender.currentHealth}/${defender.maxHealth}\n` +
             `**${move.name}** - ${move.usesRemaining}/${move.maxUses} uses remaining`
           )
-          .setColor('#FFD700')
+          .setColor('#F5E6FF')
           .setTimestamp();
       } else {
-        // Normal attack
         const damage = calculateDamage(move.damage);
         defender.currentHealth = Math.max(0, defender.currentHealth - damage);
 
         actionEmbed = new EmbedBuilder()
-          .setTitle(`${attacker.name} used ${move.name}!`)
+          .setTitle(`⭐ ${attacker.name} used ${move.name}!`)
           .setDescription(
             `💥 Dealt **${damage}** damage to ${defender.name}!\n\n` +
             `**${defender.name}** - HP: ${defender.currentHealth}/${defender.maxHealth}\n` +
             `**${move.name}** - ${move.usesRemaining}/${move.maxUses} uses remaining`
           )
-          .setColor('#FF6B6B')
+          .setColor('#FFB3C6')
           .setTimestamp();
       }
 
       await message.channel.send({ embeds: [actionEmbed] });
 
-      // Check if defender died (only if not dodged)
       if (!isDodged && defender.currentHealth === 0) {
         await message.channel.send(`💀 **${defender.name}** has been defeated!`);
 
-        // Check if all defenders dead
         if (defenderTeam.every(c => c.currentHealth === 0)) {
           const winner = await message.client.users.fetch(userId);
           const loser = await message.client.users.fetch(isChallenger ? battle.opponent : battle.challenger);
@@ -426,16 +405,15 @@ module.exports = {
           activeBattles.delete(message.channel.id);
 
           const winEmbed = new EmbedBuilder()
-            .setTitle('🏆 Battle Ended!')
-            .setDescription(`${winner} wins the battle against ${loser}!`)
-            .setColor('#FFD700')
+            .setTitle('˗ˏˋ 𐙚 🏆 𝔅𝔞𝔱𝔱𝔩𝔢 𝔈𝔫𝔡𝔢𝔡! 𐙚 ˎˊ˗')
+            .setDescription(`${winner} wins the celestial duel against ${loser}!`)
+            .setColor('#F5E6FF')
             .setTimestamp();
 
           return message.channel.send({ embeds: [winEmbed] });
         }
       }
 
-      // Switch turn
       battle.turn = isChallenger ? battle.opponent : battle.challenger;
       battle.currentRound++;
 
@@ -443,18 +421,18 @@ module.exports = {
       const nextTeam = battle.turn === battle.challenger ? battle.challengerTeam : battle.opponentTeam;
       const nextChar = nextTeam.find(c => c.currentHealth > 0);
 
-      const movesList = nextChar.moves.map((m, i) => 
+      const movesList = nextChar.moves.map((m, i) =>
         `${i + 1}. **${m.name}** (${m.damage}) - ${m.usesRemaining}/${m.maxUses} uses`
       ).join('\n');
 
       const nextTurnEmbed = new EmbedBuilder()
-        .setTitle(`Round ${battle.currentRound} - ${nextPlayer.username}'s Turn`)
+        .setTitle(`Round ${battle.currentRound} - ˗ˏˋ 𐙚 ${nextPlayer.username}'𝕤 𝕋𝕦𝕣𝕟 𐙚 ˎˊ˗`)
         .setDescription(
           `**${nextChar.name}** - HP: ${nextChar.currentHealth}/${nextChar.maxHealth}\n\n` +
           `**Choose your move:**\n${movesList}\n\n` +
-          `Type \`.battle attack <move number>\` to attack!`
+          'Type `.battle attack <move number>` to attack!'
         )
-        .setColor('#00FF00')
+        .setColor('#C1FFD7')
         .setTimestamp();
 
       return message.channel.send({ embeds: [nextTurnEmbed] });

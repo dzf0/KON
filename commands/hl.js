@@ -24,18 +24,22 @@ module.exports = {
 
     // NERF: fewer rounds and softer multipliers
     const maxRounds = 3;
-    const multipliers = [0, 1.5, 2.2, 3]; 
+    const multipliers = [0, 1.5, 2.2, 3];
     // index = streak; streak 1→1.5x, 2→2.2x, 3→3x
 
     let embed = new EmbedBuilder()
-      .setTitle('🔼 Higher or Lower 🔽')
+      .setTitle('˗ˏˋ 𐙚 🔼 𝔥𝔦𝔤𝔥𝔢𝔯 𝓸𝔯 𝔩𝔬𝔴𝔢𝔯 🔽 𐙚 ˎˊ˗')
       .setDescription(
-        `Current number: **${current}**\n` +
-        `React 🔼 for Higher, 🔽 for Lower.\n` +
-        `Streak: **0**\n` +
-        `Payout caps at **${multipliers[maxRounds]}x** after ${maxRounds} correct guesses.`
+        [
+          `Current number: **${current}**`,
+          '',
+          'React 🔼 for **Higher**, 🔽 for **Lower**.',
+          '',
+          `Streak: **0**`,
+          `Payout caps at **${multipliers[maxRounds]}x** after **${maxRounds}** correct celestial guesses.`
+        ].join('\n')
       )
-      .setColor('#3333aa')
+      .setColor('#F5E6FF')
       .setTimestamp();
 
     let statusMsg = await message.channel.send({ embeds: [embed] });
@@ -53,20 +57,26 @@ module.exports = {
         userData.balance += payout;
         await saveUserData({ balance: userData.balance });
         resultMsg =
-          `🎉 You survived ${streakCount} round(s)!\n` +
-          `The next number was **${finalNum}**.\n` +
-          `**You won ${payout}!**`;
+          [
+            `🎉 You survived **${streakCount}** celestial round(s)!`,
+            `The next number was **${finalNum}**.`,
+            `**You won ${payout} coins!**`
+          ].join('\n');
       } else {
         resultMsg =
-          `❌ You lost! The next number was **${finalNum}**.\n` +
-          `Streak: ${streakCount}. You lost your bet.`;
+          [
+            `❌ Your streak has fallen. The next number was **${finalNum}**.`,
+            `Streak: **${streakCount}** – you lost your bet.`
+          ].join('\n');
       }
+
       const endEmbed = new EmbedBuilder()
-        .setTitle('🔼 Higher or Lower 🔽 Result')
+        .setTitle('˗ˏˋ 𐙚 🔮 𝔥/𝔩 𝔯𝔢𝔰𝔲𝔩𝔱𝔰 𐙚 ˎˊ˗')
         .setDescription(resultMsg)
-        .addFields({ name: 'Balance', value: userData.balance.toString(), inline: true })
-        .setColor(won ? '#00FF00' : '#FF0000')
+        .addFields({ name: '💰 Balance', value: `**${userData.balance}**`, inline: true })
+        .setColor(won ? '#C1FFD7' : '#FFB3C6')
         .setTimestamp();
+
       await message.channel.send({ embeds: [endEmbed] });
     }
 
@@ -85,22 +95,26 @@ module.exports = {
         streak += 1;
         current = nextNum;
 
-        // If reached max streak, cash out with nerfed multiplier
         if (streak >= maxRounds) {
           collector.stop('win');
           const payout = Math.floor(bet * multipliers[streak]);
           return endGame(true, payout, streak, nextNum);
         } else {
           const streakEmbed = new EmbedBuilder()
-            .setTitle('🔼 Higher or Lower 🔽')
+            .setTitle('˗ˏˋ 𐙚 🔼 𝔥𝔦𝔤𝔥𝔢𝔯 𝓸𝔯 𝔩𝔬𝔴𝔢𝔯 🔽 𐙚 ˎˊ˗')
             .setDescription(
-              `Correct! The new number is **${nextNum}**.\n` +
-              `React for next guess.\n` +
-              `Streak: **${streak}** (up to ${maxRounds})\n` +
-              `Current potential: **${multipliers[streak]}x** your bet if you cash out on a lossless end.`
+              [
+                `✅ Correct guess! The new number is **${nextNum}**.`,
+                '',
+                'React again to continue your streak.',
+                '',
+                `Streak: **${streak}** / ${maxRounds}`,
+                `Current potential: **${multipliers[streak]}x** your bet if you make it to the end.`
+              ].join('\n')
             )
-            .setColor('#00cc00')
+            .setColor('#C1FFD7')
             .setTimestamp();
+
           await statusMsg.edit({ embeds: [streakEmbed] });
         }
       } else {

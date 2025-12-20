@@ -18,9 +18,14 @@ module.exports = {
       return message.channel.send({
         embeds: [
           new EmbedBuilder()
-            .setColor('Red')
-            .setTitle('Access Denied')
-            .setDescription('Only admins can use admin commands.')
+            .setColor('#F5E6FF')
+            .setTitle('˗ˏˋ 𐙚 𝔸𝕔𝕔𝕖𝕤𝕤 𝔻𝕖𝕟𝕚𝕖𝕕 𐙚 ˎˊ˗')
+            .setDescription([
+              '꒰ঌ 𝔗𝔥𝔦𝔰 𝔭𝔞𝔫𝔢𝔩 𝔦𝔰 𝔯𝔢𝔰𝔢𝔯𝔳𝔢𝔡 𝔣𝔬𝔯 𝔥𝔦𝔤𝔥𝔢𝔯 𝔞𝔫𝔤𝔢𝔩𝔰 ໒꒱',
+              '',
+              'Only admins can use admin commands.'
+            ].join('\n'))
+            .setFooter({ text: 'System • Permission Check' })
         ]
       });
     }
@@ -29,9 +34,14 @@ module.exports = {
       return message.channel.send({
         embeds: [
           new EmbedBuilder()
-            .setColor('Yellow')
-            .setTitle('Invalid Usage')
-            .setDescription('Valid commands: give, remove, reset, spawn')
+            .setColor('#F5E6FF')
+            .setTitle('✧˚₊‧ 𝕀𝕟𝕧𝕒𝕝𝕚𝕕 𝕌𝕤𝕒𝕘𝕖 ‧₊˚✧')
+            .setDescription([
+              '꒰ঌ 𝔄𝔡𝔪𝔦𝔫 𝔓𝔞𝔫𝔢𝔩 ໒꒱',
+              '',
+              'Valid commands: give, remove, reset, spawn'
+            ].join('\n'))
+            .setFooter({ text: 'System • Admin Help' })
         ]
       });
     }
@@ -45,9 +55,10 @@ module.exports = {
         return message.channel.send({
           embeds: [
             new EmbedBuilder()
-              .setColor('Red')
-              .setTitle('Invalid Type')
+              .setColor('#F5E6FF')
+              .setTitle('✧˚₊‧ 𝕀𝕟𝕧𝕒𝕝𝕚𝕕 𝕋𝕪𝕡𝕖 ‧₊˚✧')
               .setDescription('Type must be either "currency" or "keys".')
+              .setFooter({ text: 'System • Argument Error' })
           ]
         });
       }
@@ -63,9 +74,10 @@ module.exports = {
           return message.channel.send({
             embeds: [
               new EmbedBuilder()
-                .setColor('Yellow')
-                .setTitle('Invalid Rarity')
+                .setColor('#F5E6FF')
+                .setTitle('✧˚₊‧ 𝕀𝕟𝕧𝕒𝕝𝕚𝕕 ℝ𝕒𝕣𝕚𝕥𝕪 ‧₊˚✧')
                 .setDescription(`Valid rarities: ${validRarities.join(', ')}`)
+                .setFooter({ text: 'System • Rarity List' })
             ]
           });
         }
@@ -78,19 +90,18 @@ module.exports = {
         return message.channel.send({
           embeds: [
             new EmbedBuilder()
-              .setColor('Yellow')
-              .setTitle('Invalid Arguments')
+              .setColor('#F5E6FF')
+              .setTitle('✧˚₊‧ 𝕀𝕟𝕧𝕒𝕝𝕚𝕕 𝔸𝕣𝕘𝕦𝕞𝕖𝕟𝕥𝕤 ‧₊˚✧')
               .setDescription(
                 `Usage: .admin ${subcommand} ${type}${type === 'keys' ? ' <rarity>' : ''} <amount> <@user>`
               )
+              .setFooter({ text: 'System • Usage Hint' })
           ]
         });
       }
 
       const userId = userMention.id;
       const targetData = await getUserData(userId);
-
-      // Import User model for direct updates
       const User = require('mongoose').model('User');
 
       if (subcommand === 'give') {
@@ -98,8 +109,7 @@ module.exports = {
           targetData.inventory = targetData.inventory || {};
           targetData.inventory[rarityKey] = (targetData.inventory[rarityKey] || 0) + amount;
           await User.updateOne({ userId }, { $set: { inventory: targetData.inventory } }, { upsert: true });
-          
-          // Log admin action
+
           await logAdminAction(
             message.author.id,
             message.author.username,
@@ -113,16 +123,22 @@ module.exports = {
           return message.channel.send({
             embeds: [
               new EmbedBuilder()
-                .setColor('Green')
-                .setTitle('Keys Given')
-                .setDescription(`Gave ${amount} ${rarityKey} key(s) to ${userMention.username}.`)
+                .setColor('#F5E6FF')
+                .setTitle('✧˚₊‧ 𝕂𝕖𝕪𝕤 𝔾𝕚𝕧𝕖𝕟 ‧₊˚✧')
+                .setDescription(
+                  [
+                    `Gave ${amount} ${rarityKey} key(s) to ${userMention.username}.`,
+                    '',
+                    '˗ˏˋ 𐙚 𝔦𝔫𝔳𝔢𝔫𝔱𝔬𝔯𝔶 𝔥𝔞𝔰 𝔟𝔢𝔢𝔫 𝔟𝔩𝔢𝔰𝔰𝔢𝔡 𐙚 ˎˊ˗'
+                  ].join('\n')
+                )
+                .setFooter({ text: 'System • Admin Action Logged' })
             ]
           });
         } else {
           targetData.balance = (targetData.balance || 0) + amount;
           await User.updateOne({ userId }, { $set: { balance: targetData.balance } }, { upsert: true });
-          
-          // Log admin action
+
           await logAdminAction(
             message.author.id,
             message.author.username,
@@ -136,9 +152,16 @@ module.exports = {
           return message.channel.send({
             embeds: [
               new EmbedBuilder()
-                .setColor('Green')
-                .setTitle('Currency Added')
-                .setDescription(`Added ${amount} coins to ${userMention.username}.`)
+                .setColor('#F5E6FF')
+                .setTitle('✧˚₊‧ ℂ𝕦𝕣𝕣𝕖𝕟𝕔𝕪 𝔸𝕕𝕕𝕖𝕕 ‧₊˚✧')
+                .setDescription(
+                  [
+                    `Added ${amount} coins to ${userMention.username}.`,
+                    '',
+                    'ෆ 𝔟𝔞𝔩𝔞𝔫𝔠𝔢 𝔟𝔩𝔢𝔰𝔰𝔢𝔡 𝔟𝔶 𝔥𝔦𝔤𝔥𝔢𝔯 𝔟𝔢𝔦𝔫𝔤𝔰 ෆ'
+                  ].join('\n')
+                )
+                .setFooter({ text: 'System • Admin Action Logged' })
             ]
           });
         }
@@ -150,9 +173,10 @@ module.exports = {
             return message.channel.send({
               embeds: [
                 new EmbedBuilder()
-                  .setColor('Red')
-                  .setTitle('Insufficient Keys')
+                  .setColor('#F5E6FF')
+                  .setTitle('✧˚₊‧ 𝕀𝕟𝕤𝕦𝕗𝕗𝕚𝕔𝕚𝕖𝕟𝕥 𝕂𝕖𝕪𝕤 ‧₊˚✧')
                   .setDescription(`${userMention.username} does not have enough ${rarityKey} key(s).`)
+                  .setFooter({ text: 'System • Inventory Check' })
               ]
             });
           }
@@ -161,8 +185,7 @@ module.exports = {
             delete targetData.inventory[rarityKey];
           }
           await User.updateOne({ userId }, { $set: { inventory: targetData.inventory } }, { upsert: true });
-          
-          // Log admin action
+
           await logAdminAction(
             message.author.id,
             message.author.username,
@@ -176,9 +199,16 @@ module.exports = {
           return message.channel.send({
             embeds: [
               new EmbedBuilder()
-                .setColor('Orange')
-                .setTitle('Keys Removed')
-                .setDescription(`Removed ${amount} ${rarityKey} key(s) from ${userMention.username}.`)
+                .setColor('#F5E6FF')
+                .setTitle('✧˚₊‧ 𝕂𝕖𝕪𝕤 ℝ𝕖𝕞𝕠𝕧𝕖𝕕 ‧₊˚✧')
+                .setDescription(
+                  [
+                    `Removed ${amount} ${rarityKey} key(s) from ${userMention.username}.`,
+                    '',
+                    '⋆｡˚ ✩ 𝔠𝔢𝔩𝔢𝔰𝔱𝔦𝔞𝔩 𝔯𝔢𝔠𝔬𝔯𝔡𝔰 𝔞𝔡𝔧𝔲𝔰𝔱𝔢𝔡 ✩ ˚｡⋆'
+                  ].join('\n')
+                )
+                .setFooter({ text: 'System • Admin Action Logged' })
             ]
           });
         } else {
@@ -186,16 +216,16 @@ module.exports = {
             return message.channel.send({
               embeds: [
                 new EmbedBuilder()
-                  .setColor('Red')
-                  .setTitle('Insufficient Currency')
+                  .setColor('#F5E6FF')
+                  .setTitle('✧˚₊‧ 𝕀𝕟𝕤𝕦𝕗𝕗𝕚𝕔𝕚𝕖𝕟𝕥 ℂ𝕦𝕣𝕣𝕖𝕟𝕔𝕪 ‧₊˚✧')
                   .setDescription(`${userMention.username} does not have enough coins.`)
+                  .setFooter({ text: 'System • Balance Check' })
               ]
             });
           }
           targetData.balance -= amount;
           await User.updateOne({ userId }, { $set: { balance: targetData.balance } }, { upsert: true });
-          
-          // Log admin action
+
           await logAdminAction(
             message.author.id,
             message.author.username,
@@ -209,9 +239,16 @@ module.exports = {
           return message.channel.send({
             embeds: [
               new EmbedBuilder()
-                .setColor('Orange')
-                .setTitle('Currency Removed')
-                .setDescription(`Removed ${amount} coins from ${userMention.username}.`)
+                .setColor('#F5E6FF')
+                .setTitle('✧˚₊‧ ℂ𝕦𝕣𝕣𝕖𝕟𝕔𝕪 ℝ𝕖𝕞𝕠𝕧𝕖𝕕 ‧₊˚✧')
+                .setDescription(
+                  [
+                    `Removed ${amount} coins from ${userMention.username}.`,
+                    '',
+                    '₊˚ෆ 𝔠𝔢𝔩𝔢𝔰𝔱𝔦𝔞𝔩 𝔩𝔢𝔡𝔤𝔢𝔯 𝔲𝔭𝔡𝔞𝔱𝔢𝔡 ෆ˚₊'
+                  ].join('\n')
+                )
+                .setFooter({ text: 'System • Admin Action Logged' })
             ]
           });
         }
@@ -225,9 +262,10 @@ module.exports = {
         return message.channel.send({
           embeds: [
             new EmbedBuilder()
-              .setColor('Yellow')
-              .setTitle('Invalid Usage')
+              .setColor('#F5E6FF')
+              .setTitle('✧˚₊‧ 𝕀𝕟𝕧𝕒𝕝𝕚𝕕 𝕌𝕤𝕒𝕘𝕖 ‧₊˚✧')
               .setDescription('Usage: `.admin reset <@user>`')
+              .setFooter({ text: 'System • Usage Hint' })
           ]
         });
       }
@@ -237,18 +275,17 @@ module.exports = {
         return message.channel.send({
           embeds: [
             new EmbedBuilder()
-              .setColor('Yellow')
-              .setTitle('User Not Found')
+              .setColor('#F5E6FF')
+              .setTitle('✧˚₊‧ 𝕌𝕤𝕖𝕣 ℕ𝕠𝕥 𝔽𝕠𝕦𝕟𝕕 ‧₊˚✧')
               .setDescription(`No significant data found for user ${userMention.username}.`)
+              .setFooter({ text: 'System • Data Check' })
           ]
         });
       }
 
-      // Import User model for direct updates
       const User = require('mongoose').model('User');
       await User.updateOne({ userId }, { $set: { balance: 0, inventory: {} } }, { upsert: true });
-      
-      // Log admin action
+
       await logAdminAction(
         message.author.id,
         message.author.username,
@@ -262,9 +299,16 @@ module.exports = {
       return message.channel.send({
         embeds: [
           new EmbedBuilder()
-            .setColor('Green')
-            .setTitle('User Data Reset')
-            .setDescription(`Reset user data for ${userMention.username}.`)
+            .setColor('#F5E6FF')
+            .setTitle('✧˚₊‧ 𝕌𝕤𝕖𝕣 𝔻𝕒𝕥𝕒 ℝ𝕖𝕤𝕖𝕥 ‧₊˚✧')
+            .setDescription(
+              [
+                `Reset user data for ${userMention.username}.`,
+                '',
+                '꒰ঌ 𝔱𝔥𝔢𝔦𝔯 𝔰𝔩𝔞𝔱𝔢 𝔥𝔞𝔰 𝔟𝔢𝔢𝔫 𝔴𝔦𝔭𝔢𝔡 𝔠𝔩𝔢𝔞𝔫 ໒꒱'
+              ].join('\n')
+            )
+            .setFooter({ text: 'System • Admin Action Logged' })
         ]
       });
     }
@@ -278,13 +322,14 @@ module.exports = {
         return message.channel.send({
           embeds: [
             new EmbedBuilder()
-              .setColor('Yellow')
-              .setTitle('Invalid Usage')
+              .setColor('#F5E6FF')
+              .setTitle('✧˚₊‧ 𝕀𝕟𝕧𝕒𝕝𝕚𝕕 𝕌𝕤𝕒𝕘𝕖 ‧₊˚✧')
               .setDescription(
                 'Usage: `.admin spawn <rarity> hannel_id>`\n' +
                 'Example: `.admin spawn Legendary 1405349401945178152`\n\n' +
                 'Valid rarities: ' + validRarities.join(', ')
               )
+              .setFooter({ text: 'System • Usage Hint' })
           ]
         });
       }
@@ -295,9 +340,10 @@ module.exports = {
         return message.channel.send({
           embeds: [
             new EmbedBuilder()
-              .setColor('Red')
-              .setTitle('Invalid Rarity')
+              .setColor('#F5E6FF')
+              .setTitle('✧˚₊‧ 𝕀𝕟𝕧𝕒𝕝𝕚𝕕 ℝ𝕒𝕣𝕚𝕥𝕪 ‧₊˚✧')
               .setDescription(`Valid rarities: ${validRarities.join(', ')}`)
+              .setFooter({ text: 'System • Rarity List' })
           ]
         });
       }
@@ -307,9 +353,10 @@ module.exports = {
         return message.channel.send({
           embeds: [
             new EmbedBuilder()
-              .setColor('Red')
-              .setTitle('Channel Not Found')
+              .setColor('#F5E6FF')
+              .setTitle('✧˚₊‧ ℂ𝕙𝕒𝕟𝕟𝕖𝕝 ℕ𝕠𝕥 𝔽𝕠𝕦𝕟𝕕 ‧₊˚✧')
               .setDescription(`Channel with ID ${channelId} not found. Make sure the ID is correct.`)
+              .setFooter({ text: 'System • Channel Check' })
           ]
         });
       }
@@ -317,7 +364,6 @@ module.exports = {
       try {
         const result = await keydrop.spawnKey(rarityKey, channelId, message.client);
 
-        // Log admin action if successful
         if (result.success) {
           await logAdminAction(
             message.author.id,
@@ -333,9 +379,32 @@ module.exports = {
         return message.channel.send({
           embeds: [
             new EmbedBuilder()
-              .setColor(result.success ? 'Gold' : 'Red')
-              .setTitle(result.success ? '🔑 Key Spawned' : '❌ Error')
-              .setDescription(result.message)
+              .setColor('#F5E6FF')
+              .setTitle(result.success ? '✧˚₊‧ 🔑 𝕂𝕖𝕪 𝕊𝕡𝕒𝕨𝕟𝕖𝕕 ‧₊˚✧' : '✧˚₊‧ ❌ 𝔈𝔯𝔯𝔬𝔯 ‧₊˚✧')
+              .setDescription(
+                result.success
+                  ? [
+                      '˗ˏˋ 𐙚 𝔞 𝔠𝔢𝔩𝔢𝔰𝔱𝔦𝔞𝔩 𝔨𝔢𝔶 𝔥𝔞𝔰 𝔡𝔢𝔰𝔠𝔢𝔫𝔡𝔢𝔡 𐙚 ˎˊ˗',
+                      '',
+                      result.message
+                    ].join('\n')
+                  : result.message
+              )
+              .addFields(
+                result.success
+                  ? {
+                      name: '⋆ ˚｡ 𝕂𝕖𝕪𝕕𝕣𝕠𝕡 𝔻𝕖𝕥𝕒𝕚𝕝𝕤 ｡˚ ⋆',
+                      value: `• Rarity: **${rarityKey}**\n• Channel: <#${channelId}>`,
+                      inline: false,
+                    }
+                  : {
+                      name: '⋆ ˚｡ 𝕀𝕟𝕗𝕠 ｡˚ ⋆',
+                      value: 'Check your parameters and try again.',
+                      inline: false,
+                    }
+              )
+              .setFooter({ text: 'System • Keydrop Control' })
+              .setTimestamp()
           ]
         });
       } catch (error) {
@@ -343,9 +412,10 @@ module.exports = {
         return message.channel.send({
           embeds: [
             new EmbedBuilder()
-              .setColor('Red')
-              .setTitle('Error')
+              .setColor('#F5E6FF')
+              .setTitle('✧˚₊‧ ❌ 𝔈𝔯𝔯𝔬𝔯 ‧₊˚✧')
               .setDescription('Failed to spawn key. Check console for details.')
+              .setFooter({ text: 'System • Internal Error' })
           ]
         });
       }
@@ -355,9 +425,10 @@ module.exports = {
     return message.channel.send({
       embeds: [
         new EmbedBuilder()
-          .setColor('Red')
-          .setTitle('Invalid Command')
+          .setColor('#F5E6FF')
+          .setTitle('✧˚₊‧ 𝕀𝕟𝕧𝕒𝕝𝕚𝕕 ℂ𝕠𝕞𝕞𝕒𝕟𝕕 ‧₊˚✧')
           .setDescription('Valid commands: give, remove, reset, spawn')
+          .setFooter({ text: 'System • Admin Help' })
       ]
     });
   }

@@ -41,6 +41,7 @@ module.exports = {
         return message.channel.send('❌ Word can only contain letters and spaces.');
       }
 
+      // delete admin command message
       await message.delete().catch(() => {});
 
       const gameChannel = client.channels.cache.get(GAME_CHANNEL_ID);
@@ -58,18 +59,32 @@ module.exports = {
 
       const lettersCount = word.replace(/\s/g, '').length;
 
+      const topBlock =
+        '╭──────────────────────────────╮\n' +
+        '│  🎮 New celestial hangman game has begun! │\n' +
+        '╰──────────────────────────────╯';
+
       const startEmbed = new EmbedBuilder()
-        .setTitle('🎮 Hangman Game Started!')
+        .setTitle('˗ˏˋ 𐙚 🎮 𝔠𝔢𝔩𝔢𝔰𝔱𝔦𝔞𝔩 𝔥𝔞𝔫𝔤𝔪𝔞𝔫 𝔰𝔱𝔞𝔯𝔱𝔢𝔡 𐙚 ˎˊ˗')
         .setDescription(
-          `A new hangman game has been started by an admin!\n\n` +
-          `${getWordDisplay(GAME_CHANNEL_ID)}\n\n` +
-          `This word has **${lettersCount}** letter(s) (spaces not counted).`
+          [
+            topBlock,
+            '',
+            '꒰ঌ An admin has summoned a secret word from the heavens ໒꒱',
+            '',
+            `${getWordDisplay(GAME_CHANNEL_ID)}`,
+            '',
+            `This word has **${lettersCount}** letter(s) (spaces not counted).`,
+            '',
+            'Type `.hangman guess <letter>` in this channel to start guessing!'
+          ].join('\n')
         )
         .addFields({ name: 'Wrong Guesses', value: '0/6', inline: true })
-        .setColor('#00FF00')
+        .setColor('#F5E6FF')
         .setTimestamp();
 
-      return gameChannel.send({ embeds: [startEmbed] });
+      await gameChannel.send({ embeds: [startEmbed] });
+      return;
     }
 
     // GUESS LETTER
@@ -99,21 +114,33 @@ module.exports = {
         const display = getWordDisplay(GAME_CHANNEL_ID);
 
         if (!display.includes('_')) {
-          // Word solved - award reward
-          const reward = 1000; // changed from 300 to 1000
+          const reward = 1000; // reward
           userData.balance = (userData.balance || 0) + reward;
           await saveUserData({ balance: userData.balance });
 
           const lettersCount = game.word.replace(/\s/g, '').length;
 
+          const winBlock =
+            '╭──────────────────────────────╮\n' +
+            '│  🎉 WORD COMPLETED – YOU WIN │\n' +
+            '╰──────────────────────────────╯';
+
           const winEmbed = new EmbedBuilder()
-            .setTitle('🎉 Game Won!')
+            .setTitle('˗ˏˋ 𐙚 🎉 𝔤𝔞𝔪𝔢 𝔠𝔬𝔪𝔭𝔩𝔢𝔱𝔢! 𐙚 ˎˊ˗')
             .setDescription(
-              `${message.author} guessed the word!\n\n` +
-              `**Word:** ${game.word.toUpperCase()} ( **${lettersCount}** letters )\n\n` +
-              `${message.author} earned **${reward}** kan!`
+              [
+                winBlock,
+                '',
+                `${message.author} has unveiled the heavenly word!`,
+                '',
+                `**Word:** ${game.word.toUpperCase()} ( **${lettersCount}** letters )`,
+                '',
+                `꒰ঌ ${message.author} earned **${reward}** kan for their wisdom ໒꒱`,
+                '',
+                `💰 **New Balance:** ${userData.balance} kan`
+              ].join('\n')
             )
-            .setColor('#00FF00')
+            .setColor('#C1FFD7')
             .setTimestamp();
 
           message.channel.send({ embeds: [winEmbed] });
@@ -123,18 +150,31 @@ module.exports = {
 
         const lettersCount = game.word.replace(/\s/g, '').length;
 
+        const correctBlock =
+          '╭──────────────────────────────╮\n' +
+          `│  ✅ Letter **${guess.toUpperCase()}** is correct │\n` +
+          '╰──────────────────────────────╯';
+
         const correctEmbed = new EmbedBuilder()
-          .setTitle('✅ Correct Letter!')
+          .setTitle('˗ˏˋ 𐙚 ✅ 𝔠𝔬𝔯𝔯𝔢𝔠𝔱 𝔩𝔢𝔱𝔱𝔢𝔯 𐙚 ˎˊ˗')
           .setDescription(
-            `**${guess.toUpperCase()}** is in the word!\n\n` +
-            `${display}\n\n` +
-            `This word has **${lettersCount}** letter(s) (spaces not counted).`
+            [
+              correctBlock,
+              '',
+              `${display}`,
+              '',
+              `This word has **${lettersCount}** letter(s) (spaces not counted).`
+            ].join('\n')
           )
           .addFields(
             { name: 'Wrong Guesses', value: `${game.wrongGuesses}/${game.maxWrongs}`, inline: true },
-            { name: 'Guessed', value: Array.from(game.guessed).join(', ').toUpperCase(), inline: true }
+            {
+              name: 'Guessed Letters',
+              value: Array.from(game.guessed).join(', ').toUpperCase() || 'None',
+              inline: true
+            }
           )
-          .setColor('#00FF00')
+          .setColor('#C1FFD7')
           .setTimestamp();
 
         return message.channel.send({ embeds: [correctEmbed] });
@@ -142,13 +182,23 @@ module.exports = {
         game.wrongGuesses++;
 
         if (game.wrongGuesses >= game.maxWrongs) {
+          const loseBlock =
+            '╭──────────────────────────────╮\n' +
+            '│  💀 MAX STRIKES – GAME OVER │\n' +
+            '╰──────────────────────────────╯';
+
           const loseEmbed = new EmbedBuilder()
-            .setTitle('💀 Game Over!')
+            .setTitle('˗ˏˋ 𐙚 💀 𝔤𝔞𝔪𝔢 𝔬𝔳𝔢𝔯 𐙚 ˎˊ˗')
             .setDescription(
-              `${hangmanStages[game.wrongGuesses]}\n\n` +
-              `**The word was:** ${game.word.toUpperCase()}`
+              [
+                loseBlock,
+                '',
+                `${hangmanStages[game.wrongGuesses]}`,
+                '',
+                `**The word was:** ${game.word.toUpperCase()}`
+              ].join('\n')
             )
-            .setColor('#FF0000')
+            .setColor('#FFB3C6')
             .setTimestamp();
 
           message.channel.send({ embeds: [loseEmbed] });
@@ -158,19 +208,33 @@ module.exports = {
 
         const lettersCount = game.word.replace(/\s/g, '').length;
 
+        const wrongBlock =
+          '╭──────────────────────────────╮\n' +
+          `│  ❌ Letter **${guess.toUpperCase()}** is wrong │\n` +
+          '╰──────────────────────────────╯';
+
         const wrongEmbed = new EmbedBuilder()
-          .setTitle('❌ Wrong Letter!')
+          .setTitle('˗ˏˋ 𐙚 ❌ 𝔴𝔯𝔬𝔫𝔤 𝔩𝔢𝔱𝔱𝔢𝔯 𐙚 ˎˊ˗')
           .setDescription(
-            `${hangmanStages[game.wrongGuesses]}\n\n` +
-            `**${guess.toUpperCase()}** is not in the word.\n\n` +
-            `${getWordDisplay(GAME_CHANNEL_ID)}\n\n` +
-            `This word has **${lettersCount}** letter(s) (spaces not counted).`
+            [
+              wrongBlock,
+              '',
+              `${hangmanStages[game.wrongGuesses]}`,
+              '',
+              `${getWordDisplay(GAME_CHANNEL_ID)}`,
+              '',
+              `This word has **${lettersCount}** letter(s) (spaces not counted).`
+            ].join('\n')
           )
           .addFields(
             { name: 'Wrong Guesses', value: `${game.wrongGuesses}/${game.maxWrongs}`, inline: true },
-            { name: 'Guessed', value: Array.from(game.guessed).join(', ').toUpperCase(), inline: true }
+            {
+              name: 'Guessed Letters',
+              value: Array.from(game.guessed).join(', ').toUpperCase() || 'None',
+              inline: true
+            }
           )
-          .setColor('#FF6347')
+          .setColor('#FFB3C6')
           .setTimestamp();
 
         return message.channel.send({ embeds: [wrongEmbed] });
@@ -189,7 +253,7 @@ module.exports = {
 
       activeGamesMap.delete(GAME_CHANNEL_ID);
       const gameChannel = client.channels.cache.get(GAME_CHANNEL_ID);
-      if (gameChannel) gameChannel.send('✅ Game cancelled by admin.');
+      if (gameChannel) gameChannel.send('✅ Hangman game cancelled by an admin.');
       return message.channel.send('✅ Game cancelled.');
     }
 

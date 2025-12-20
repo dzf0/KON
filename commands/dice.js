@@ -21,34 +21,61 @@ module.exports = {
 
     const roll = Math.floor(Math.random() * 6) + 1; // 1-6
     let reward = 0;
-    let result = '';
+    let resultBlock = '';
 
-    // 50% win (4–6), 50% lose (1–3)
-    // profits are small so game stays healthy
     if (roll === 6) {
-      reward = Math.floor(bet * 2);       // +1x profit
+      reward = Math.floor(bet * 2);
       userData.balance += reward;
-      result = `🎲 You rolled **6**! You win **${reward}** (2x your bet)!`;
+
+      resultBlock =
+        '╭──────────────────────────────╮\n' +
+        '│  🎲 Rolled: **6**            │\n' +
+        '│  **✨ CELESTIAL JACKPOT ✨**  │\n' +
+        `│  Reward: **${reward}** (2x)  │\n` +
+        '╰──────────────────────────────╯';
     } else if (roll === 5) {
-      reward = Math.floor(bet * 1.7);     // +0.7x profit
+      reward = Math.floor(bet * 1.7);
       userData.balance += reward;
-      result = `🎲 You rolled **5**! You win **${reward}** (1.7x your bet)!`;
+
+      resultBlock =
+        '╭──────────────────────────────╮\n' +
+        '│  🎲 Rolled: **5**            │\n' +
+        '│  **⭐ HEAVENLY WIN ⭐**       │\n' +
+        `│  Reward: **${reward}** (1.7x)│\n` +
+        '╰──────────────────────────────╯';
     } else if (roll === 4) {
-      reward = Math.floor(bet * 1.4);     // +0.4x profit
+      reward = Math.floor(bet * 1.4);
       userData.balance += reward;
-      result = `🎲 You rolled **4**! You win **${reward}** (1.4x your bet)!`;
+
+      resultBlock =
+        '╭──────────────────────────────╮\n' +
+        '│  🎲 Rolled: **4**            │\n' +
+        '│  **🪽 BLESSED WIN 🪽**       │\n' +
+        `│  Reward: **${reward}** (1.4x)│\n` +
+        '╰──────────────────────────────╯';
     } else {
-      // 1–3: lose bet
-      result = `🎲 You rolled **${roll}**. Unlucky, you lose your bet.`;
+      resultBlock =
+        '╭──────────────────────────────╮\n' +
+        `│  🎲 Rolled: **${roll}**      │\n` +
+        '│  **💔 FALLEN BET – YOU LOSE**│\n' +
+        '╰──────────────────────────────╯';
     }
 
     await saveUserData({ balance: userData.balance });
 
     const embed = new EmbedBuilder()
-      .setTitle('Dice Roll')
-      .setDescription(result)
-      .addFields({ name: 'New Balance', value: userData.balance.toString(), inline: true })
-      .setColor(reward > 0 ? '#00FF00' : '#FF0000')
+      .setTitle('˗ˏˋ 𐙚 🎲 𝔠𝔢𝔩𝔢𝔰𝔱𝔦𝔞𝔩 𝔇𝔦𝔠𝔢 𝕋𝕒𝕓𝕝𝕖 𐙚 ˎˊ˗')
+      .setDescription(
+        [
+          '꒰ঌ rolling the heavenly dice ໒꒱',
+          '',
+          resultBlock,
+          '',
+          `💰 **New Balance:** ${userData.balance} coins`
+        ].join('\n')
+      )
+      .setColor('#F5E6FF')
+      .setFooter({ text: 'System • Angelic Games ✧' })
       .setTimestamp();
 
     message.channel.send({ embeds: [embed] });

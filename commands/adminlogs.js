@@ -11,9 +11,10 @@ module.exports = {
       return message.channel.send({
         embeds: [
           new EmbedBuilder()
-            .setColor('Red')
-            .setTitle('Access Denied')
+            .setColor('#F5E6FF')
+            .setTitle('˗ˏˋ 𐙚 𝔄𝔠𝔠𝔢𝔰𝔰 𝔇𝔢𝔫𝔦𝔢𝔡 𐙚 ˎˊ˗')
             .setDescription('Only admins can view admin logs.')
+            .setFooter({ text: 'System • Permission Check' })
         ]
       });
     }
@@ -34,9 +35,10 @@ module.exports = {
         return message.channel.send({
           embeds: [
             new EmbedBuilder()
-              .setColor('Yellow')
-              .setTitle('📋 Admin Logs')
+              .setColor('#F5E6FF')
+              .setTitle('📋 𝔄𝔡𝔪𝔦𝔫 𝕃𝕠𝕘𝕤')
               .setDescription('No admin actions recorded in the past 7 days.')
+              .setFooter({ text: 'System • Log Viewer' })
               .setTimestamp()
           ]
         });
@@ -65,11 +67,17 @@ module.exports = {
       }
 
       const embed = new EmbedBuilder()
-        .setTitle('📋 Admin Command Logs (Past 7 Days)')
-        .setDescription(logText || 'No logs to display')
-        .setColor('#5865F2')
-        .setFooter({ 
-          text: `Page 1/${totalPages} • Showing ${firstPageLogs.length} of ${logs.length} logs` 
+        .setTitle('✧˚₊‧ 📋 𝔄𝔡𝔪𝔦𝔫 ℂ𝔬𝔪𝔪𝔞𝔫𝔡 𝕃𝕠𝕘𝕤 ‧₊˚✧')
+        .setDescription(
+          [
+            '꒰ঌ 𝔓𝔞𝔰𝔱 𝟟 𝔡𝔞𝔶𝔰 𝔬𝔣 𝔞𝔠𝔱𝔦𝔬𝔫𝔰 ໒꒱',
+            '',
+            logText || 'No logs to display'
+          ].join('\n')
+        )
+        .setColor('#F5E6FF')
+        .setFooter({
+          text: `Page 1/${totalPages} • Showing ${firstPageLogs.length} of ${logs.length} logs`
         })
         .setTimestamp();
 
@@ -80,9 +88,10 @@ module.exports = {
       message.channel.send({
         embeds: [
           new EmbedBuilder()
-            .setColor('Red')
-            .setTitle('Error')
+            .setColor('#F5E6FF')
+            .setTitle('✧˚₊‧ ❌ 𝔈𝔯𝔯𝔬𝔯 ‧₊˚✧')
             .setDescription('Failed to retrieve admin logs. Check console for details.')
+            .setFooter({ text: 'System • Internal Error' })
         ]
       });
     }

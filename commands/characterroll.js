@@ -269,17 +269,49 @@ module.exports = {
   name: 'roll',
   description: 'Roll for anime characters from crates',
   async execute({ message, args, userData, saveUserData }) {
-    const cost = 2000; // cost per roll
+    const cost = 2000;
 
     if (userData.balance < cost) {
-      return message.channel.send(`❌ You need **${cost}** coins to roll! Your balance: **${userData.balance}**`);
+      return message.channel.send(
+        `❌ You need **${cost}** coins to roll! Your balance: **${userData.balance}**`
+      );
     }
 
-    // Deduct cost
     userData.balance -= cost;
     userData.characters = userData.characters || [];
 
-    // Roll rarity
+    // Animation embed
+    const animationEmbed = new EmbedBuilder()
+      .setTitle('˗ˏˋ 𐙚 ✨ 𝔯𝔬𝔩𝔩𝔦𝔫𝔤... ✨ 𐙚 ˎˊ˗')
+      .setDescription(
+        '⠀\n꒰ঌ spinning the celestial wheel ໒꒱\n⠀'
+      )
+      .setColor('#F5E6FF')
+      .setTimestamp();
+
+    const animMsg = await message.channel.send({ embeds: [animationEmbed] });
+
+    // Simulate rolling animation with delays
+    const frames = ['⠋', '⠙', '⠹', '⠸', '⠼', '⠴', '⠦', '⠧', '⠇', '⠏'];
+    for (let i = 0; i < 15; i++) {
+      const frame = frames[i % frames.length];
+      await animMsg.edit({
+        embeds: [
+          new EmbedBuilder()
+            .setTitle('˗ˏˋ 𐙚 ✨ 𝔯𝔬𝔩𝔩𝔦𝔫𝔤... ✨ 𐙚 ˎˊ˗')
+            .setDescription(
+              `${frame} ${frame} ${frame}\n` +
+              '꒰ঌ spinning the celestial wheel ໒꒱\n' +
+              `${frame} ${frame} ${frame}`
+            )
+            .setColor('#F5E6FF')
+            .setTimestamp()
+        ]
+      });
+      await new Promise(resolve => setTimeout(resolve, 300));
+    }
+
+    // Roll the actual result
     const tier = rollRarity();
     const availableChars = getCharactersByTier(tier);
 
@@ -287,25 +319,21 @@ module.exports = {
       return message.channel.send('⚠️ No characters available in this tier.');
     }
 
-    // Pick random character from that tier
     const charName = availableChars[Math.floor(Math.random() * availableChars.length)];
     const char = characters[charName];
 
-    // Check if duplicate
     const isDuplicate = userData.characters.some(c => c.name === charName);
     let refundAmount = 0;
     let statusText = '';
 
     if (isDuplicate) {
-      // Give refund based on tier
       refundAmount = duplicateRefunds[tier] || 400;
       userData.balance += refundAmount;
-      statusText = `\n\n💰 **Duplicate!** Refunded **${refundAmount}** coins.`;
+      statusText = `\n💰 **Duplicate!** Refunded **${refundAmount}** coins.`;
     } else {
-      statusText = '\n\n✨ **New character unlocked!**';
+      statusText = '\n✨ **New character unlocked!**';
     }
 
-    // Add to user collection regardless (for duplicates can be used later)
     userData.characters.push({
       name: charName,
       series: char.series,
@@ -319,22 +347,32 @@ module.exports = {
       characters: userData.characters
     });
 
-    // Build moves display
     const movesText = char.moves.map(m => `• **${m.name}** (${m.damage})`).join('\n');
 
     const tierColor = rarityRates.find(r => r.name === tier)?.color || '#808080';
 
-    const embed = new EmbedBuilder()
-      .setTitle(`${isDuplicate ? '🔄' : '🎉'} You rolled: ${charName}!`)
+    const resultEmbed = new EmbedBuilder()
+      .setTitle(`${isDuplicate ? '🔄' : '🎉'} ${isDuplicate ? 'You got a duplicate!' : 'You rolled: ' + charName + '!'}`)
       .setDescription(
-        `**Series:** ${char.series}\n` +
-        `**Tier:** ${char.tier}${statusText}\n\n` +
-        `**Moves:**\n${movesText}`
+        [
+          `✧˚₊‧════════════════════╮ 𐙚 ╭════════════════════‧₊˚✧`,
+          '',
+          `📺 **Series:** ${char.series}`,
+          `✨ **Tier:** ${char.tier}`,
+          statusText,
+          '',
+          `**𝔞𝔯𝔠𝔞𝔫𝔞𝔦𝔯𝔞𝔦𝔱𝔬𝔰:**`,
+          movesText,
+          '',
+          `💰 **New Balance:** ${userData.balance} coins`,
+          '',
+          '✧˚₊‧════════════════════╮ 𐙚 ╭════════════════════‧₊˚✧'
+        ].join('\n')
       )
       .setColor(tierColor)
-      .setFooter({ text: `Balance: ${userData.balance} coins` })
-      .setTimestamp();
+      .setTimestamp()
+      .setFooter({ text: 'System • Gacha Pull' });
 
-    return message.channel.send({ embeds: [embed] });
+    await animMsg.edit({ embeds: [resultEmbed] });
   }
 };
