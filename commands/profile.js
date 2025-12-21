@@ -1,6 +1,6 @@
 const { EmbedBuilder } = require('discord.js');
 
-const SILV_ROLE_ID = '1382513369801555988'; // Users with this role can customize
+const SILV_ROLE_ID = '1452178800459645026'; // Users with this role can customize
 
 module.exports = {
   name: 'profile',
