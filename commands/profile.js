@@ -160,7 +160,7 @@ function viewProfile(message, user, userData) {
 
   const economyValue =
     `🪙 **Coins:** \`${balance.toLocaleString()}\`\n` +
-    `🜂 **SILV Tokens:** \`${silv}\``;
+    `<:SILV_TOKEN:1447678878448484555> **SILV Tokens:** \`${silv}\``;
 
   embed.addFields({
     name: '💰 ECONOMY',
