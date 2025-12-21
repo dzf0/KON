@@ -67,7 +67,7 @@ module.exports = {
 // .shop add (name) (item_id) (category) (priceCoins) (priceSilv) (chance 0-100) [roleId] [roleDays]
 // examples:
 // .shop add mystery box mystery_box Mythical 0 3 10
-// .shop add SILV MEMBER silv_member Exclusive 0 5 50 1452...5026 7
+// .shop add SILV MEMBER silv_member Exclusive 0 5 50 1452178800459645026 7
 async function handleAddItem({ message, args }) {
   const member = message.member;
   if (!member.roles.cache.has(SHOP_ADMIN_ROLE_ID)) {
@@ -83,7 +83,7 @@ async function handleAddItem({ message, args }) {
       .setTitle('˗ˏˋ 📜 SHOP ADD USAGE ˎˊ˗')
       .setDescription(
         [
-          '```',
+          '```
           '.shop add (name) (item_id) (category) (priceCoins) (priceSilv) (chance 0-100) [roleId] [roleDays]',
           '',
           'Example:',
@@ -96,19 +96,20 @@ async function handleAddItem({ message, args }) {
     return message.channel.send({ embeds: [embed] });
   }
 
-  // We assume item_id is ONE word (no spaces).
-  // So: take everything up to the item_id as name.
-  const itemIdIndex = 1; // first arg after name
-  const nameParts = args.slice(0, itemIdIndex);
-  const rawName = nameParts.join(' ');
+  // We treat the FIRST arg as item_id; everything before it is name.
+  // So split once: find position where you start typing item_id.
+  // For simplicity, require syntax: name is ONE argument, then item_id...
+  // => .shop add NAME item_id Category priceCoins priceSilv chance [roleId] [roleDays]
+  // If you want spaces in name, use underscores in NAME or adjust parser.
 
-  const rawId = args[itemIdIndex];
-  const rawCategory = args[itemIdIndex + 1];
-  const rawPriceCoins = args[itemIdIndex + 2];
-  const rawPriceSilv = args[itemIdIndex + 3];
-  const rawChance = args[itemIdIndex + 4];
-  const rawRoleId = args[itemIdIndex + 5] || null;
-  const rawRoleDays = args[itemIdIndex + 6] || null;
+  const rawName = args[0];
+  const rawId = args[1];
+  const rawCategory = args[2];
+  const rawPriceCoins = args[3];
+  const rawPriceSilv = args[4];
+  const rawChance = args[5];
+  const rawRoleId = args[6] || null;
+  const rawRoleDays = args[7] || null;
 
   const name = rawName;
   const itemId = rawId.toLowerCase();
@@ -381,33 +382,37 @@ async function handleBuy({ message, args, userData, saveUserData }) {
     inventory: userData.inventory,
   });
 
+  const fields = [
+    {
+      name: '💰 New Balance',
+      value: `**${userData.balance.toLocaleString()}** coins`,
+      inline: true,
+    },
+    {
+      name: `${SILV_TOKEN_ITEM.emoji} Silv tokens`,
+      value: `**${userData.inventory[SILV_TOKEN_ITEM.name] || 0}x**`,
+      inline: true,
+    },
+  ];
+
+  if (item.roleId) {
+    fields.push({
+      name: '👑 Role',
+      value:
+        item.roleDays && item.roleDays > 0
+          ? `<@&${item.roleId}> for **${item.roleDays} day(s)**`
+          : `<@&${item.roleId}> (permanent)`,
+      inline: false,
+    });
+  }
+
   const embed = new EmbedBuilder()
     .setTitle('˗ˏˋ 𐙚 ✅ PURCHASE COMPLETE 𐙚 ˎˊ˗')
     .setDescription(
       `꒰ঌ You bought **1x** **${item.name}** \`(${item.itemId})\` ໒꒱`,
     )
-    .addFields(
-      {
-        name: '💰 New Balance',
-        value: `**${userData.balance.toLocaleString()}** coins`,
-        inline: true,
-      },
-      {
-        name: `${SILV_TOKEN_ITEM.emoji} Silv tokens`,
-        value: `**${userData.inventory[SILV_TOKEN_ITEM.name] || 0}x**`,
-        inline: true,
-      },
-      item.roleId
-        ? {
-            name: '👑 Role',
-            value:
-              item.roleDays && item.roleDays > 0
-                ? `<@&${item.roleId}> for **${item.roleDays} day(s)**`
-                : `<@&${item.roleId}> (permanent)`,
-            inline: false,
-          }
-        : null,
-    ).setColor('#27ae60')
+    .addFields(fields)
+    .setColor('#27ae60')
     .setTimestamp()
     .setFooter({ text: 'System • Shop' });
 
