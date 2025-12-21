@@ -1,6 +1,6 @@
 const { EmbedBuilder } = require('discord.js');
 
-const SILV_ROLE_ID = '1452178800459645026'; // Users with this role can customize
+const SILV_ROLE_ID = '1382513369801555988'; // Users with this role can customize
 
 module.exports = {
   name: 'profile',
@@ -20,8 +20,7 @@ module.exports = {
       // Check SILV role for customization
       if (!message.member.roles.cache.has(SILV_ROLE_ID)) {
         return message.channel.send(
-          '❌ Only SILV members can customize profiles!\n' +
-          'Buy SILV tokens to unlock customization: `.silvshop buy silv_token 1`'
+          '❌ Only SILV members can customize profiles!'
         );
       }
 
@@ -121,18 +120,19 @@ function viewProfile(message, user, userData) {
   const profileBio = userData.profileBio || 'No bio set';
   const profileBanner = userData.profileBanner || null;
 
-  // Build header with proper banner display
-  let headerLine1 = `│  ${user.username.toUpperCase()}`;
-  if (isSilvMember) {
-    headerLine1 += ' ⭐ SILV MEMBER ⭐';
-  }
-  headerLine1 += '  │';
-
+  // Build header - simple username only
   let headerBlock =
     '╭───────────────────────────────────────────╮\n' +
-    headerLine1 + '\n';
+    `│  ${user.username.toUpperCase().padEnd(41)} │\n`;
   
-  if (profileBanner) {
+  // SILV badge line - ONLY if they have the role
+  if (isSilvMember) {
+    headerBlock +=
+      '│  ⭐ SILV MEMBER ⭐                        │\n';
+  }
+  
+  // Banner - ONLY if they set one AND have SILV role
+  if (profileBanner && isSilvMember) {
     headerBlock +=
       `│  ✨ ${profileBanner.padEnd(37)} ✨ │\n`;
   }
@@ -160,7 +160,7 @@ function viewProfile(message, user, userData) {
 
   const economyValue =
     `🪙 **Coins:** \`${balance.toLocaleString()}\`\n` +
-    `<:SILV_TOKEN:1447678878448484555> **SILV Tokens:** \`${silv}\``;
+    `🜂 **SILV Tokens:** \`${silv}\``;
 
   embed.addFields({
     name: '💰 ECONOMY',
