@@ -66,8 +66,8 @@ module.exports = {
 // ================== ADMIN: ADD ITEM ==================
 // .shop add (name) (item_id) (category) (priceCoins) (priceSilv) (chance 0-100) [roleId] [roleDays]
 // examples:
-// .shop add mystery box mystery_box Mythical 0 3 10
-// .shop add SILV MEMBER silv_member Exclusive 0 5 50 1452178800459645026 7
+// .shop add mystery_box mystery_box Mythical 0 3 10
+// .shop add SILV_MEMBER silv_member Exclusive 0 5 50 1452178800459645026 7
 async function handleAddItem({ message, args }) {
   const member = message.member;
   if (!member.roles.cache.has(SHOP_ADMIN_ROLE_ID)) {
@@ -87,8 +87,8 @@ async function handleAddItem({ message, args }) {
           '.shop add (name) (item_id) (category) (priceCoins) (priceSilv) (chance 0-100) [roleId] [roleDays]',
           '',
           'Example:',
-          '.shop add mystery box mystery_box Mythical 0 3 10',
-          '.shop add SILV MEMBER silv_member Exclusive 0 5 50 1452178800459645026 7',
+          '.shop add mystery_box mystery_box Mythical 0 3 10',
+          '.shop add SILV_MEMBER silv_member Exclusive 0 5 50 1452178800459645026 7',
           '```',
         ].join('\n'),
       )
@@ -96,12 +96,7 @@ async function handleAddItem({ message, args }) {
     return message.channel.send({ embeds: [embed] });
   }
 
-  // We treat the FIRST arg as item_id; everything before it is name.
-  // So split once: find position where you start typing item_id.
-  // For simplicity, require syntax: name is ONE argument, then item_id...
-  // => .shop add NAME item_id Category priceCoins priceSilv chance [roleId] [roleDays]
-  // If you want spaces in name, use underscores in NAME or adjust parser.
-
+  // For simplicity, name is one argument (no spaces), like your baltop IDs.
   const rawName = args[0];
   const rawId = args[1];
   const rawCategory = args[2];
@@ -233,8 +228,11 @@ async function handleRemoveItem({ message, args }) {
 }
 
 // ================== BUY ==================
+// .shop buy item_id [amount]
 async function handleBuy({ message, args, userData, saveUserData }) {
   const itemId = (args[0] || '').toLowerCase();
+  let amount = Number(args[1] || 1);
+
   if (!itemId) {
     const embed = new EmbedBuilder()
       .setTitle('˗ˏˋ 📜 SHOP BUY USAGE ˎˊ˗')
@@ -243,19 +241,25 @@ async function handleBuy({ message, args, userData, saveUserData }) {
     return message.channel.send({ embeds: [embed] });
   }
 
+  if (Number.isNaN(amount) || amount <= 0) {
+    amount = 1;
+  }
+
   userData.inventory = userData.inventory || {};
   const coins = userData.balance || 0;
   const silv = userData.inventory[SILV_TOKEN_ITEM.name] || 0;
 
   // ---- BUY SILV TOKEN ----
   if (itemId === SILV_TOKEN_ITEM.id) {
-    if (coins < SILV_TOKEN_ITEM.priceCoins) {
-      const missing = SILV_TOKEN_ITEM.priceCoins - coins;
+    const totalPrice = SILV_TOKEN_ITEM.priceCoins * amount;
+
+    if (coins < totalPrice) {
+      const missing = totalPrice - coins;
       const embed = new EmbedBuilder()
         .setTitle('✧˚₊‧ ✖ NOT ENOUGH COINS ‧₊˚✧')
         .setDescription(
           [
-            `**Needed**   »  ${SILV_TOKEN_ITEM.priceCoins.toLocaleString()} 💰`,
+            `**Needed**   »  ${totalPrice.toLocaleString()} 💰`,
             `**You have** »  ${coins.toLocaleString()} 💰`,
             `**Missing**  »  ${missing.toLocaleString()} 💰`,
           ].join('\n'),
@@ -264,9 +268,9 @@ async function handleBuy({ message, args, userData, saveUserData }) {
       return message.channel.send({ embeds: [embed] });
     }
 
-    userData.balance = coins - SILV_TOKEN_ITEM.priceCoins;
+    userData.balance = coins - totalPrice;
     userData.inventory[SILV_TOKEN_ITEM.name] =
-      (userData.inventory[SILV_TOKEN_ITEM.name] || 0) + 1;
+      (userData.inventory[SILV_TOKEN_ITEM.name] || 0) + amount;
 
     await saveUserData({
       balance: userData.balance,
@@ -276,7 +280,7 @@ async function handleBuy({ message, args, userData, saveUserData }) {
     const embed = new EmbedBuilder()
       .setTitle('˗ˏˋ 𐙚 ✅ PURCHASE COMPLETE 𐙚 ˎˊ˗')
       .setDescription(
-        `꒰ঌ You bought **1x** ${SILV_TOKEN_ITEM.emoji} **${SILV_TOKEN_ITEM.name}** ໒꒱`,
+        `꒰ঌ You bought **${amount}x** ${SILV_TOKEN_ITEM.emoji} **${SILV_TOKEN_ITEM.name}** ໒꒱`,
       )
       .addFields(
         {
@@ -307,14 +311,22 @@ async function handleBuy({ message, args, userData, saveUserData }) {
     return message.channel.send({ embeds: [embed] });
   }
 
+  // if item gives a role, force amount = 1
+  if (item.roleId && amount > 1) {
+    amount = 1;
+  }
+
+  const totalCoins = item.priceCoins * amount;
+  const totalSilv = item.priceSilv * amount;
+
   if (item.priceSilv > 0) {
-    if (silv < item.priceSilv) {
-      const missing = item.priceSilv - silv;
+    if (silv < totalSilv) {
+      const missing = totalSilv - silv;
       const embed = new EmbedBuilder()
         .setTitle('✧˚₊‧ ✖ NOT ENOUGH SILV ‧₊˚✧')
         .setDescription(
           [
-            `**Needed**   »  ${item.priceSilv} ${SILV_TOKEN_ITEM.emoji}`,
+            `**Needed**   »  ${totalSilv} ${SILV_TOKEN_ITEM.emoji}`,
             `**You have** »  ${silv} ${SILV_TOKEN_ITEM.emoji}`,
             `**Missing**  »  ${missing} ${SILV_TOKEN_ITEM.emoji}`,
           ].join('\n'),
@@ -324,15 +336,15 @@ async function handleBuy({ message, args, userData, saveUserData }) {
     }
 
     userData.inventory[SILV_TOKEN_ITEM.name] =
-      (userData.inventory[SILV_TOKEN_ITEM.name] || 0) - item.priceSilv;
+      (userData.inventory[SILV_TOKEN_ITEM.name] || 0) - totalSilv;
   } else if (item.priceCoins > 0) {
-    if (coins < item.priceCoins) {
-      const missing = item.priceCoins - coins;
+    if (coins < totalCoins) {
+      const missing = totalCoins - coins;
       const embed = new EmbedBuilder()
         .setTitle('✧˚₊‧ ✖ NOT ENOUGH COINS ‧₊˚✧')
         .setDescription(
           [
-            `**Needed**   »  ${item.priceCoins.toLocaleString()} 💰`,
+            `**Needed**   »  ${totalCoins.toLocaleString()} 💰`,
             `**You have** »  ${coins.toLocaleString()} 💰`,
             `**Missing**  »  ${missing.toLocaleString()} 💰`,
           ].join('\n'),
@@ -340,7 +352,7 @@ async function handleBuy({ message, args, userData, saveUserData }) {
         .setColor('#e74c3c');
       return message.channel.send({ embeds: [embed] });
     }
-    userData.balance = coins - item.priceCoins;
+    userData.balance = coins - totalCoins;
   } else {
     const embed = new EmbedBuilder()
       .setTitle('⚠ NO PRICE SET')
@@ -349,7 +361,7 @@ async function handleBuy({ message, args, userData, saveUserData }) {
     return message.channel.send({ embeds: [embed] });
   }
 
-  // Give role if needed (with optional expiry)
+  // Give role if needed (with optional expiry, only once)
   if (item.roleId) {
     try {
       const member = await message.guild.members.fetch(message.author.id);
@@ -357,7 +369,6 @@ async function handleBuy({ message, args, userData, saveUserData }) {
       if (role && !member.roles.cache.has(item.roleId)) {
         await member.roles.add(item.roleId);
 
-        // If roleDays > 0, schedule removal
         if (item.roleDays && item.roleDays > 0) {
           const ms = item.roleDays * 24 * 60 * 60 * 1000;
           setTimeout(async () => {
@@ -382,6 +393,12 @@ async function handleBuy({ message, args, userData, saveUserData }) {
     inventory: userData.inventory,
   });
 
+  // add items to inventory if they are not pure-role items (you can customize key)
+  if (!item.roleId) {
+    const key = item.name;
+    userData.inventory[key] = (userData.inventory[key] || 0) + amount;
+  }
+
   const fields = [
     {
       name: '💰 New Balance',
@@ -404,12 +421,18 @@ async function handleBuy({ message, args, userData, saveUserData }) {
           : `<@&${item.roleId}> (permanent)`,
       inline: false,
     });
+  } else {
+    fields.push({
+      name: '📦 Total Owned',
+      value: `**${userData.inventory[item.name] || amount}x**`,
+      inline: false,
+    });
   }
 
   const embed = new EmbedBuilder()
     .setTitle('˗ˏˋ 𐙚 ✅ PURCHASE COMPLETE 𐙚 ˎˊ˗')
     .setDescription(
-      `꒰ঌ You bought **1x** **${item.name}** \`(${item.itemId})\` ໒꒱`,
+      `꒰ঌ You bought **${amount}x** **${item.name}** \`(${item.itemId})\` ໒꒱`,
     )
     .addFields(fields)
     .setColor('#27ae60')
@@ -463,7 +486,7 @@ async function showShop({ message }) {
     .setDescription(
       [
         '╭─────────── • ───────────╮',
-        '**Use** `.shop buy ITEM_ID` **to purchase.**',
+        '**Use** `.shop buy ITEM_ID [amount]` **to purchase.**',
         `${SILV_TOKEN_ITEM.emoji} **Silv token** has an **80%** chance each refresh.`,
         '',
         '**Shop refreshes every 4 hours.**',
