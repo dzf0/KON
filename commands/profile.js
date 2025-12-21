@@ -8,9 +8,12 @@ module.exports = {
   async execute({ message, args, userData, saveUserData }) {
     const targetUser = message.mentions.users.first() || message.author;
     
+    // Get target user's member object to check their roles
+    const targetMember = await message.guild.members.fetch(targetUser.id).catch(() => null);
+    
     // Viewing someone else's profile
     if (targetUser.id !== message.author.id) {
-      return viewProfile(message, targetUser, userData);
+      return viewProfile(message, targetUser, userData, targetMember);
     }
 
     // Own profile management
@@ -110,12 +113,13 @@ module.exports = {
     }
 
     // View own profile
-    return viewProfile(message, message.author, userData);
+    return viewProfile(message, message.author, userData, message.member);
   }
 };
 
-function viewProfile(message, user, userData) {
-  const isSilvMember = message.member?.roles.cache.has('1382513369801555988') || false;
+function viewProfile(message, user, userData, targetMember) {
+  // Check if TARGET USER has SILV role (not the command user)
+  const isSilvMember = targetMember?.roles.cache.has('1382513369801555988') || false;
   const profileColor = userData.profileColor || '#F5E6FF';
   const profileBio = userData.profileBio || 'No bio set';
   const profileBanner = userData.profileBanner || null;
@@ -125,7 +129,7 @@ function viewProfile(message, user, userData) {
     '╭───────────────────────────────────────────╮\n' +
     `│  ${user.username.toUpperCase().padEnd(41)} │\n`;
   
-  // SILV badge line - ONLY if they have the role
+  // SILV badge line - ONLY if THEY have the role
   if (isSilvMember) {
     headerBlock +=
       '│  ⭐ SILV MEMBER ⭐                        │\n';
