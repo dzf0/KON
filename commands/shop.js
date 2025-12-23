@@ -18,6 +18,19 @@ const SILV_TOKEN_ITEM = {
   spawnChance: 80,
 };
 
+// Category emojis
+const CATEGORY_EMOJIS = {
+  Currency: '💰',
+  Weapons: '⚔️',
+  Armor: '🛡️',
+  Roles: '👑',
+  Skins: '🎨',
+  Items: '📦',
+  Cosmetics: '✨',
+  Exclusive: '💎',
+  Mythical: '🧿',
+};
+
 // ===== SHOP REFRESH (4 HOURS) =====
 let shopCache = {
   lastRollTime: 0,
@@ -65,9 +78,6 @@ module.exports = {
 
 // ================== ADMIN: ADD ITEM ==================
 // .shop add (name) (item_id) (category) (priceCoins) (priceSilv) (chance 0-100) [roleId] [roleDays]
-// examples:
-// .shop add mystery_box mystery_box Mythical 0 3 10
-// .shop add SILV_MEMBER silv_member Exclusive 0 5 50 1452178800459645026 7
 async function handleAddItem({ message, args }) {
   const member = message.member;
   if (!member.roles.cache.has(SHOP_ADMIN_ROLE_ID)) {
@@ -96,7 +106,6 @@ async function handleAddItem({ message, args }) {
     return message.channel.send({ embeds: [embed] });
   }
 
-  // For simplicity, name is one argument (no spaces), like your baltop IDs.
   const rawName = args[0];
   const rawId = args[1];
   const rawCategory = args[2];
@@ -161,13 +170,15 @@ async function handleAddItem({ message, args }) {
 
   await item.save();
 
+  const catEmoji = CATEGORY_EMOJIS[category] || '📦';
+
   const embed = new EmbedBuilder()
     .setTitle('˗ˏˋ 𐙚 ✅ SHOP ITEM ADDED 𐙚 ˎˊ˗')
     .setDescription(
       [
         `**${name}** \`(${itemId})\``,
         '',
-        `**Category**  »  ${category}`,
+        `**Category**  »  ${catEmoji} ${category}`,
         `**Coins**     »  ${priceCoins.toLocaleString()} 💰`,
         `**Silv**      »  ${priceSilv} ${SILV_TOKEN_ITEM.emoji}`,
         `**Chance**    »  ${spawnChance}%`,
@@ -364,10 +375,21 @@ async function handleBuy({ message, args, userData, saveUserData }) {
   // Give role if needed (with optional expiry, only once)
   if (item.roleId) {
     try {
+      console.log('SHOP ROLE DEBUG » item.roleId =', item.roleId);
+
       const member = await message.guild.members.fetch(message.author.id);
       const role = message.guild.roles.cache.get(item.roleId);
+
+      console.log('SHOP ROLE DEBUG » resolved role =', role && role.id, role && role.name);
+
+      if (!role) {
+        console.log('SHOP ROLE DEBUG » role not found in this guild for id', item.roleId);
+      }
+
       if (role && !member.roles.cache.has(item.roleId)) {
-        await member.roles.add(item.roleId);
+        await member.roles.add(role);
+
+        console.log('SHOP ROLE DEBUG » role added OK');
 
         if (item.roleDays && item.roleDays > 0) {
           const ms = item.roleDays * 24 * 60 * 60 * 1000;
@@ -375,7 +397,8 @@ async function handleBuy({ message, args, userData, saveUserData }) {
             try {
               const freshMember = await message.guild.members.fetch(message.author.id);
               if (freshMember.roles.cache.has(item.roleId)) {
-                await freshMember.roles.remove(item.roleId);
+                await freshMember.roles.remove(role);
+                console.log('SHOP ROLE DEBUG » timed role removed');
               }
             } catch (e) {
               console.error('Failed to remove timed role:', e);
@@ -384,7 +407,7 @@ async function handleBuy({ message, args, userData, saveUserData }) {
         }
       }
     } catch (err) {
-      console.error(err);
+      console.error('SHOP ROLE DEBUG » add failed:', err);
     }
   }
 
@@ -393,7 +416,6 @@ async function handleBuy({ message, args, userData, saveUserData }) {
     inventory: userData.inventory,
   });
 
-  // add items to inventory if they are not pure-role items (you can customize key)
   if (!item.roleId) {
     const key = item.name;
     userData.inventory[key] = (userData.inventory[key] || 0) + amount;
@@ -497,16 +519,6 @@ async function showShop({ message }) {
     .setThumbnail(message.guild.iconURL())
     .setTimestamp();
 
-  const categoryEmojis = {
-    Currency: '💰',
-    Weapons: '⚔️',
-    Armor: '🛡️',
-    Roles: '👑',
-    Skins: '🎨',
-    Items: '📦',
-    Cosmetics: '✨',
-  };
-
   if (Object.keys(byCategory).length === 0) {
     embed.addFields({
       name: '🛒  TODAY\'S SHOP',
@@ -523,7 +535,7 @@ async function showShop({ message }) {
   }
 
   for (const [category, list] of Object.entries(byCategory)) {
-    const emoji = categoryEmojis[category] || '📦';
+    const emoji = CATEGORY_EMOJIS[category] || '📦';
     let value = '';
 
     for (const it of list) {
