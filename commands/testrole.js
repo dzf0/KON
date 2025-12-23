@@ -3,7 +3,7 @@ const { EmbedBuilder } = require('discord.js');
 const ADMIN_ROLE_ID = '1382513369801555988'; // same as in admin.js
 
 module.exports = {
-  name: 'testrole',
+  name: 'tr',
   description: 'Debug: directly give SILV MEMBER to yourself',
   async execute({ message }) {
     // only admins
