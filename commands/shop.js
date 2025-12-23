@@ -93,7 +93,7 @@ async function handleAddItem({ message, args }) {
       .setTitle('˗ˏˋ 📜 SHOP ADD USAGE ˎˊ˗')
       .setDescription(
         [
-          '```',
+          '```
           '.shop add (name) (item_id) (category) (priceCoins) (priceSilv) (chance 0-100) [roleId] [roleDays]',
           '',
           'Example:',
@@ -252,9 +252,7 @@ async function handleBuy({ message, args, userData, saveUserData }) {
     return message.channel.send({ embeds: [embed] });
   }
 
-  if (Number.isNaN(amount) || amount <= 0) {
-    amount = 1;
-  }
+  if (Number.isNaN(amount) || amount <= 0) amount = 1;
 
   userData.inventory = userData.inventory || {};
   const coins = userData.balance || 0;
@@ -323,9 +321,7 @@ async function handleBuy({ message, args, userData, saveUserData }) {
   }
 
   // if item gives a role, force amount = 1
-  if (item.roleId && amount > 1) {
-    amount = 1;
-  }
+  if (item.roleId && amount > 1) amount = 1;
 
   const totalCoins = item.priceCoins * amount;
   const totalSilv = item.priceSilv * amount;
