@@ -3,6 +3,9 @@ const { EmbedBuilder } = require('discord.js');
 // ROLE THAT UNLOCKS EXCLUSIVE PROFILE + CUSTOMIZATION
 const EXCLUSIVE_ROLE_ID = '1452178800459645026';
 
+// Inventory key for Silv tokens (same as shop)
+const SILV_TOKEN_KEY = 'Silv token';
+
 module.exports = {
   name: 'profile',
   description: 'View a profile. Special role = exclusive customizable profile.',
@@ -19,7 +22,9 @@ module.exports = {
       : await getUserData(targetUser.id);
 
     // Fetch GuildMember for role checks
-    const targetMember = await message.guild.members.fetch(targetUser.id).catch(() => null);
+    const targetMember = await message.guild.members
+      .fetch(targetUser.id)
+      .catch(() => null);
     const isExclusive = !!targetMember?.roles.cache.has(EXCLUSIVE_ROLE_ID);
 
     // CUSTOMIZATION ONLY: self + .profile customize ...
@@ -50,10 +55,13 @@ async function handleCustomize({ message, args, userData, saveUserData }) {
 
   if (!option) {
     return message.channel.send(
-      '**Exclusive Profile Customization:**\n' +
-      '`.profile customize color #HEXCODE`\n' +
-      '`.profile customize bio <text>`\n' +
-      '`.profile customize banner <text>`'
+      '**Exclusive Profile Customization:**
+' +
+        '`.profile customize color #HEXCODE`
+' +
+        '`.profile customize bio <text>`
+' +
+        '`.profile customize banner <text>`',
     );
   }
 
@@ -62,12 +70,16 @@ async function handleCustomize({ message, args, userData, saveUserData }) {
     const member = message.member;
     const hasRole = member.roles.cache.has(EXCLUSIVE_ROLE_ID);
     if (!hasRole) {
-      return message.channel.send('❌ Only exclusive members can change profile color.');
+      return message.channel.send(
+        '❌ Only exclusive members can change profile color.',
+      );
     }
 
     const color = args[1];
     if (!color || !/^#[0-9A-F]{6}$/i.test(color)) {
-      return message.channel.send('Usage: `.profile customize color #HEXCODE`');
+      return message.channel.send(
+        'Usage: `.profile customize color #HEXCODE`',
+      );
     }
 
     userData.profileColor = color;
@@ -77,8 +89,10 @@ async function handleCustomize({ message, args, userData, saveUserData }) {
 
   if (option === 'bio') {
     const bio = args.slice(1).join(' ');
-    if (!bio) return message.channel.send('Usage: `.profile customize bio <text>`');
-    if (bio.length > 100) return message.channel.send('❌ Bio must be ≤ 100 characters.');
+    if (!bio)
+      return message.channel.send('Usage: `.profile customize bio <text>`');
+    if (bio.length > 100)
+      return message.channel.send('❌ Bio must be ≤ 100 characters.');
 
     userData.profileBio = bio;
     await saveUserData({ profileBio: bio });
@@ -87,8 +101,12 @@ async function handleCustomize({ message, args, userData, saveUserData }) {
 
   if (option === 'banner') {
     const banner = args.slice(1).join(' ');
-    if (!banner) return message.channel.send('Usage: `.profile customize banner <text>`');
-    if (banner.length > 50) return message.channel.send('❌ Banner must be ≤ 50 characters.');
+    if (!banner)
+      return message.channel.send(
+        'Usage: `.profile customize banner <text>`',
+      );
+    if (banner.length > 50)
+      return message.channel.send('❌ Banner must be ≤ 50 characters.');
 
     userData.profileBanner = banner;
     await saveUserData({ profileBanner: banner });
@@ -113,9 +131,9 @@ function showProfile({ message, targetUser, userData, isExclusive, isSelf }) {
   const bio = userData.profileBio || 'No bio set.';
   const banner = userData.profileBanner || null;
 
-  // Economy
+  // Economy (Silv uses same key as inventory/shop)
   const coins = userData.balance || 0;
-  const silv = userData.inventory?.silv_token || 0;
+  const silv = userData.inventory?.[SILV_TOKEN_KEY] || 0;
 
   // Characters
   const chars = userData.characters || [];
@@ -129,13 +147,17 @@ function showProfile({ message, targetUser, userData, isExclusive, isSelf }) {
 
   // Header box
   let header =
-    '╭──────────────────────────────────────────╮\n' +
-    `│  ${targetUser.username.toUpperCase().padEnd(38)} │\n`;
+    '╭──────────────────────────────────────────╮
+' +
+    `│  ${targetUser.username.toUpperCase().padEnd(38)} │
+`;
 
   if (isExclusive) {
-    header += '│  ⭐ EXCLUSIVE MEMBER ⭐                  │\n';
+    header += '│  ⭐ EXCLUSIVE MEMBER ⭐                  │
+';
     if (banner) {
-      header += `│  ✨ ${banner.padEnd(34)} ✨ │\n`;
+      header += `│  ✨ ${banner.padEnd(34)} ✨ │
+`;
     }
   }
 
@@ -143,7 +165,9 @@ function showProfile({ message, targetUser, userData, isExclusive, isSelf }) {
 
   const embed = new EmbedBuilder()
     .setTitle(`˗ˏˋ 𐙚 ${targetUser.username}'s Profile 𐙚 ˎˊ˗`)
-    .setDescription(`${header}\n\n**Bio:** _${bio}_`)
+    .setDescription(`${header}
+
+**Bio:** _${bio}_`)
     .setThumbnail(targetUser.displayAvatarURL({ dynamic: true }))
     .setColor(color) // always use stored color
     .setTimestamp();
@@ -152,18 +176,18 @@ function showProfile({ message, targetUser, userData, isExclusive, isSelf }) {
   embed.addFields({
     name: '💰 ECONOMY',
     value:
-      `• Coins: \`${coins.toLocaleString()}\`\n` +
-      `• <:SILV_TOKEN:1447678878448484555> SILV Tokens: \`${silv}\``,
+      `• Coins: `${coins.toLocaleString()}`` +
+      `• <:SILV_TOKEN:1447678878448484555> SILV Tokens: `${silv}``,
     inline: true,
   });
 
   // Characters field
   let charText = `• Total: **${charCount}**`;
   if (charCount > 0) {
-    if (tiers.S) charText += `\n• S Tier: ${tiers.S}`;
-    if (tiers.A) charText += `\n• A Tier: ${tiers.A}`;
-    if (tiers.B) charText += `\n• B Tier: ${tiers.B}`;
-    if (tiers.C) charText += `\n• C Tier: ${tiers.C}`;
+    if (tiers.S) charText += `• S Tier: ${tiers.S}`;
+    if (tiers.A) charText += `• A Tier: ${tiers.A}`;
+    if (tiers.B) charText += `• B Tier: ${tiers.B}`;
+    if (tiers.C) charText += `• C Tier: ${tiers.C}`;
   }
 
   embed.addFields({
@@ -192,8 +216,8 @@ function showProfile({ message, targetUser, userData, isExclusive, isSelf }) {
     embed.addFields({
       name: '⚙️ PROFILE CUSTOMIZATION',
       value:
-        '`.profile customize color #HEXCODE`\n' +
-        '`.profile customize bio <text>`\n' +
+        '`.profile customize color #HEXCODE`' +
+        '`.profile customize bio <text>`' +
         '`.profile customize banner <text>`',
       inline: false,
     });
