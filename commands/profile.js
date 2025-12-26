@@ -145,15 +145,12 @@ function showProfile({ message, targetUser, userData, isExclusive, isSelf }) {
   // Header box
   let header =
     '╭──────────────────────────────────────────╮' +
-    `│  ${targetUser.username.toUpperCase().padEnd(38)} │
-`;
+    `│  ${targetUser.username.toUpperCase().padEnd(38)} │`;
 
   if (isExclusive) {
-    header += '│  ⭐ EXCLUSIVE MEMBER ⭐                  │
-';
+    header += '│  ⭐ EXCLUSIVE MEMBER ⭐                  │';
     if (banner) {
-      header += `│  ✨ ${banner.padEnd(34)} ✨ │
-`;
+      header += `│  ✨ ${banner.padEnd(34)} ✨ │`;
     }
   }
 
