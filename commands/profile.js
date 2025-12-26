@@ -55,9 +55,9 @@ async function handleCustomize({ message, args, userData, saveUserData }) {
 
   if (!option) {
     return message.channel.send(
-      '**Exclusive Profile Customization:**' +
-        '`.profile customize color #HEXCODE`' +
-        '`.profile customize bio <text>`' +
+      '**Exclusive Profile Customization:**\n' +
+        '`.profile customize color #HEXCODE`\n' +
+        '`.profile customize bio <text>`\n' +
         '`.profile customize banner <text>`',
     );
   }
@@ -144,13 +144,13 @@ function showProfile({ message, targetUser, userData, isExclusive, isSelf }) {
 
   // Header box
   let header =
-    '╭──────────────────────────────────────────╮' +
-    `│  ${targetUser.username.toUpperCase().padEnd(38)} │`;
+    '╭──────────────────────────────────────────╮\n' +
+    `│  ${targetUser.username.toUpperCase().padEnd(38)} │\n`;
 
   if (isExclusive) {
-    header += '│  ⭐ EXCLUSIVE MEMBER ⭐                  │';
+    header += '│  ⭐ EXCLUSIVE MEMBER ⭐                  │\n';
     if (banner) {
-      header += `│  ✨ ${banner.padEnd(34)} ✨ │`;
+      header += `│  ✨ ${banner.padEnd(34)} ✨ │\n`;
     }
   }
 
@@ -158,9 +158,7 @@ function showProfile({ message, targetUser, userData, isExclusive, isSelf }) {
 
   const embed = new EmbedBuilder()
     .setTitle(`˗ˏˋ 𐙚 ${targetUser.username}'s Profile 𐙚 ˎˊ˗`)
-    .setDescription(`${header}
-
-**Bio:** _${bio}_`)
+    .setDescription(`${header}\n\n**Bio:** _${bio}_`)
     .setThumbnail(targetUser.displayAvatarURL({ dynamic: true }))
     .setColor(color) // always use stored color
     .setTimestamp();
@@ -169,18 +167,18 @@ function showProfile({ message, targetUser, userData, isExclusive, isSelf }) {
   embed.addFields({
     name: '💰 ECONOMY',
     value:
-      `• Coins: `${coins.toLocaleString()}`` +
-      `• <:SILV_TOKEN:1447678878448484555> SILV Tokens: `${silv}``,
+      `• Coins: \`${coins.toLocaleString()}\`\n` +
+      `• <:SILV_TOKEN:1447678878448484555> SILV Tokens: \`${silv}\``,
     inline: true,
   });
 
   // Characters field
   let charText = `• Total: **${charCount}**`;
   if (charCount > 0) {
-    if (tiers.S) charText += `• S Tier: ${tiers.S}`;
-    if (tiers.A) charText += `• A Tier: ${tiers.A}`;
-    if (tiers.B) charText += `• B Tier: ${tiers.B}`;
-    if (tiers.C) charText += `• C Tier: ${tiers.C}`;
+    if (tiers.S) charText += `\n• S Tier: ${tiers.S}`;
+    if (tiers.A) charText += `\n• A Tier: ${tiers.A}`;
+    if (tiers.B) charText += `\n• B Tier: ${tiers.B}`;
+    if (tiers.C) charText += `\n• C Tier: ${tiers.C}`;
   }
 
   embed.addFields({
@@ -209,8 +207,8 @@ function showProfile({ message, targetUser, userData, isExclusive, isSelf }) {
     embed.addFields({
       name: '⚙️ PROFILE CUSTOMIZATION',
       value:
-        '`.profile customize color #HEXCODE`' +
-        '`.profile customize bio <text>`' +
+        '`.profile customize color #HEXCODE`\n' +
+        '`.profile customize bio <text>`\n' +
         '`.profile customize banner <text>`',
       inline: false,
     });
@@ -218,3 +216,4 @@ function showProfile({ message, targetUser, userData, isExclusive, isSelf }) {
 
   return message.channel.send({ embeds: [embed] });
 }
+
