@@ -144,8 +144,7 @@ function showProfile({ message, targetUser, userData, isExclusive, isSelf }) {
 
   // Header box
   let header =
-    '╭──────────────────────────────────────────╮
-' +
+    '╭──────────────────────────────────────────╮' +
     `│  ${targetUser.username.toUpperCase().padEnd(38)} │
 `;
 
