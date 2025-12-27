@@ -6,7 +6,7 @@ const mongoose = require('mongoose');
 const { Client, GatewayIntentBits, Collection, EmbedBuilder } = require('discord.js');
 const keydrop = require('./commands/keydrop.js');
 
-// Start Express server to keep bot awake on some hosts
+// Start Express server to keep bot awake
 const app = express();
 const PORT = process.env.PORT || 3000;
 app.get('/', (req, res) => res.send('Bot is running'));
@@ -19,8 +19,6 @@ const userSchema = new mongoose.Schema({
   inventory: { type: Object, default: {} },
   lastDaily: { type: Date, default: null },
   characters: { type: Array, default: [] },
-
-  // profile fields
   profileColor: { type: String, default: null },
   profileBio: { type: String, default: null },
   profileBanner: { type: String, default: null },
@@ -28,7 +26,6 @@ const userSchema = new mongoose.Schema({
 
 const User = mongoose.model('User', userSchema);
 
-// Admin Log Schema
 const adminLogSchema = new mongoose.Schema({
   adminId: { type: String, required: true },
   adminUsername: { type: String, required: true },
@@ -68,61 +65,6 @@ async function logAdminAction(
   }
 }
 
-// ===== DISCORD CLIENT SETUP =====
-const client = new Client({
-  intents: [
-    GatewayIntentBits.Guilds,
-    GatewayIntentBits.GuildMessages,
-    GatewayIntentBits.MessageContent,
-    GatewayIntentBits.GuildMessageReactions,
-  ],
-});
-
-client.commands = new Collection();
-const prefix = '.';
-
-// ===== GLOBAL COOLDOWNS MAP (per user + command) =====
-const cooldowns = new Map();
-const COOLDOWN_MS = 5000;
-
-// Load commands dynamically (EXCLUDE keydrop.js)
-const commandsPath = path.join(__dirname, 'commands');
-const commandFiles = fs.existsSync(commandsPath)
-  ? fs.readdirSync(commandsPath).filter(file => file.endsWith('.js') && file !== 'keydrop.js')
-  : [];
-
-for (const file of commandFiles) {
-  const command = require(path.join(commandsPath, file));
-  if (command.name && command.execute) {
-    client.commands.set(command.name, command);
-  }
-}
-
-// Rarity and guessing-game config
-const rarities = [
-  { name: 'Prismatic', chance: 0.0001 },
-  { name: 'Mythical', chance: 0.001 },
-  { name: 'Legendary', chance: 0.01 },
-  { name: 'Rare', chance: 0.05 },
-  { name: 'Uncommon', chance: 0.10 },
-  { name: 'Common', chance: 0.20 },
-];
-
-const rewardsByRarity = {
-  Prismatic: { min: 500, max: 1000 },
-  Mythical:  { min: 300, max: 600 },
-  Legendary: { min: 200, max: 400 },
-  Rare:      { min: 100, max: 200 },
-  Uncommon:  { min: 50,  max: 100 },
-  Common:    { min: 10,  max: 50 },
-};
-
-let guessGame = {
-  active: false,
-  number: null,
-  channelId: null,
-};
-
 // ===== DB HELPERS =====
 async function getUserData(userId) {
   let user = await User.findOne({ userId });
@@ -140,11 +82,7 @@ async function getUserData(userId) {
 }
 
 async function saveUserData(userId, userData) {
-  await User.updateOne(
-    { userId },
-    { $set: userData },
-    { upsert: true }
-  );
+  await User.updateOne({ userId }, { $set: userData }, { upsert: true });
 }
 
 async function updateUserBalance(userId, amount) {
@@ -163,14 +101,95 @@ async function addKeyToInventory(userId, rarity, quantity) {
   await saveUserData(userId, { inventory: user.inventory });
 }
 
+// ===== DISCORD CLIENT SETUP =====
+const client = new Client({
+  intents: [
+    GatewayIntentBits.Guilds,
+    GatewayIntentBits.GuildMessages,
+    GatewayIntentBits.MessageContent,
+    GatewayIntentBits.GuildMessageReactions,
+  ],
+});
+
+client.commands = new Collection();
+const prefix = '.';
+
+// Ready event listener (BEFORE startBot)
+client.once('ready', () => {
+  console.log(`✅ Logged in as ${client.user.tag}`);
+});
+
+// Global cooldowns
+const cooldowns = new Map();
+const COOLDOWN_MS = 5000;
+
+// Load commands dynamically (exclude keydrop.js)
+const commandsPath = path.join(__dirname, 'commands');
+if (fs.existsSync(commandsPath)) {
+  const commandFiles = fs
+    .readdirSync(commandsPath)
+    .filter(file => file.endsWith('.js') && file !== 'keydrop.js');
+
+  for (const file of commandFiles) {
+    try {
+      const command = require(path.join(commandsPath, file));
+      if (command.name && command.execute) {
+        client.commands.set(command.name, command);
+        console.log(`Loaded command: ${command.name}`);
+      }
+    } catch (error) {
+      console.error(`Error loading command ${file}:`, error);
+    }
+  }
+}
+
+// Rarity config
+const rarities = [
+  { name: 'Prismatic', chance: 0.0001 },
+  { name: 'Mythical', chance: 0.001 },
+  { name: 'Legendary', chance: 0.01 },
+  { name: 'Rare', chance: 0.05 },
+  { name: 'Uncommon', chance: 0.10 },
+  { name: 'Common', chance: 0.20 },
+];
+
+const rewardsByRarity = {
+  Prismatic: { min: 500, max: 1000 },
+  Mythical: { min: 300, max: 600 },
+  Legendary: { min: 200, max: 400 },
+  Rare: { min: 100, max: 200 },
+  Uncommon: { min: 50, max: 100 },
+  Common: { min: 10, max: 50 },
+};
+
+let guessGame = {
+  active: false,
+  number: null,
+  channelId: null,
+};
+
+function getRandomRarity() {
+  const roll = Math.random();
+  let cumulative = 0;
+  for (const rarity of rarities) {
+    cumulative += rarity.chance;
+    if (roll <= cumulative) return rarity.name;
+  }
+  return rarities[rarities.length - 1].name;
+}
+
 // ===== MESSAGE HANDLER =====
 client.on('messageCreate', async (message) => {
   if (message.author.bot) return;
 
-  // Passive key drop system
-  await keydrop.handleKeyDrop(message, client);
+  // Passive key drop
+  try {
+    await keydrop.handleKeyDrop(message, client);
+  } catch (error) {
+    console.error('Error in keydrop:', error);
+  }
 
-  // Passive guessing game
+  // Guessing game
   if (guessGame.active && message.channel.id === guessGame.channelId) {
     const guess = parseInt(message.content);
     if (!isNaN(guess)) {
@@ -178,8 +197,7 @@ client.on('messageCreate', async (message) => {
         const wonRarity = getRandomRarity();
         const rewardRange = rewardsByRarity[wonRarity] || { min: 10, max: 50 };
         const rewardAmount =
-          Math.floor(Math.random() * (rewardRange.max - rewardRange.min + 1)) +
-          rewardRange.min;
+          Math.floor(Math.random() * (rewardRange.max - rewardRange.min + 1)) + rewardRange.min;
 
         const userData = await getUserData(message.author.id);
         userData.inventory = userData.inventory || {};
@@ -194,7 +212,7 @@ client.on('messageCreate', async (message) => {
         const winEmbed = new EmbedBuilder()
           .setTitle('Game Winner!')
           .setDescription(
-            `${message.author} guessed the number **${guessGame.number}** and won a **${wonRarity}** key with **${rewardAmount} coins**!`
+            `${message.author} guessed **${guessGame.number}** and won a **${wonRarity}** key with **${rewardAmount} coins**!`
           )
           .setColor('Gold')
           .setTimestamp();
@@ -216,41 +234,36 @@ client.on('messageCreate', async (message) => {
   const command = client.commands.get(commandName);
   if (!command) return;
 
-  // ===== RESTRICT KEY CHANNEL =====
+  // Keys channel restriction
   const KEYS_CHANNEL_ID = '1401925188991582338';
-  const allowedInKeysChannel = ['redeem', 'hangman', 'inventory', 'inv', 'bal', 'baltop', 'claim','profile'];
+  const allowedInKeysChannel = ['claim', 'redeem', 'hangman', 'inventory', 'inv', 'bal', 'baltop', 'profile'];
 
-  if (
-    message.channel.id === KEYS_CHANNEL_ID &&
-    !allowedInKeysChannel.includes(command.name)
-  ) {
+  if (message.channel.id === KEYS_CHANNEL_ID && !allowedInKeysChannel.includes(command.name)) {
     return;
   }
-  // ================================
 
-  // ===== PER-USER PER-COMMAND COOLDOWN (5s) =====
+  // Cooldown check
   if (!cooldowns.has(command.name)) {
     cooldowns.set(command.name, new Map());
   }
+
   const now = Date.now();
   const timestamps = cooldowns.get(command.name);
-  const cooldownAmount = COOLDOWN_MS;
 
   if (timestamps.has(message.author.id)) {
-    const expirationTime = timestamps.get(message.author.id) + cooldownAmount;
-
+    const expirationTime = timestamps.get(message.author.id) + COOLDOWN_MS;
     if (now < expirationTime) {
       const remaining = ((expirationTime - now) / 1000).toFixed(1);
       return message.channel.send(
-        `⏳ Please wait **${remaining}s** before using \`${prefix}${command.name}\` again.`
+        `⏳ Wait **${remaining}s** before using \`${prefix}${command.name}\` again.`
       );
     }
   }
 
   timestamps.set(message.author.id, now);
-  setTimeout(() => timestamps.delete(message.author.id), cooldownAmount);
-  // ===============================================
+  setTimeout(() => timestamps.delete(message.author.id), COOLDOWN_MS);
 
+  // Execute command
   try {
     const userData = await getUserData(message.author.id);
 
@@ -271,7 +284,7 @@ client.on('messageCreate', async (message) => {
       AdminLog,
     });
   } catch (error) {
-    console.error('Error executing command:', error);
+    console.error(`Error executing ${command.name}:`, error);
     const errorEmbed = new EmbedBuilder()
       .setTitle('Command Error')
       .setDescription('An error occurred executing that command.')
@@ -281,41 +294,26 @@ client.on('messageCreate', async (message) => {
   }
 });
 
-client.once('ready', () => {
-  console.log(`Logged in as ${client.user.tag}`);
-});
-
-// ===== RARITY HELPER =====
-function getRandomRarity() {
-  const roll = Math.random();
-  let cumulative = 0;
-  for (const rarity of rarities) {
-    cumulative += rarity.chance;
-    if (roll <= cumulative) return rarity.name;
-  }
-  return rarities[rarities.length - 1].name;
-}
-
-// ===== START BOT ONLY AFTER DB CONNECTS =====
+// ===== START BOT =====
 async function startBot() {
   try {
-    mongoose.connection.on('error', err => {
-      console.error('Mongo connection error:', err);
-    });
-    mongoose.connection.on('disconnected', () => {
-      console.error('Mongo disconnected');
+    mongoose.connection.on('error', (err) => {
+      console.error('❌ MongoDB connection error:', err);
     });
 
-    await mongoose.connect(process.env.MONGO_URI); // wait for connection[web:358][web:360]
-    console.log('Connected to MongoDB');
+    mongoose.connection.on('disconnected', () => {
+      console.log('⚠️ MongoDB disconnected');
+    });
+
+    await mongoose.connect(process.env.MONGO_URI);
+    console.log('✅ Connected to MongoDB');
 
     await client.login(process.env.DISCORD_TOKEN);
-    console.log('Bot logged in');
+    console.log('🔄 Bot login initiated...');
   } catch (err) {
-    console.error('Failed to start bot:', err);
+    console.error('❌ Failed to start bot:', err);
     process.exit(1);
   }
 }
 
 startBot();
-
