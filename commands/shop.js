@@ -174,7 +174,7 @@ async function handleAddItem({ message, args }) {
       .setTitle('˗ˏˋ 📜 SHOP ADD USAGE ˎˊ˗')
       .setDescription(
         [
-          '```
+          '```',
           '.shop add [name] (item_id) [category words] (priceCoins) (priceSilv) (chance)',
           '[name] = optional, ( ) = required',
           '',
@@ -540,3 +540,4 @@ async function showShop({ message }) {
   return message.channel.send({ embeds: [embed] });
 }
   
+
