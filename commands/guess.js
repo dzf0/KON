@@ -1,7 +1,7 @@
 const { EmbedBuilder } = require('discord.js');
 
 const GUESS_ADMIN_ROLE_ID = '1382513369801555988';
-const GUESS_CHANNEL_ID = '1401925188991582338';
+const GUESS_CHANNEL_ID = '1454818862397653074';
 
 const guessGameState = {
   active: false,
@@ -97,3 +97,4 @@ module.exports = {
   guessGameRarities,
   getRandomRarity,
 };
+
