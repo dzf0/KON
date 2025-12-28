@@ -266,7 +266,7 @@ async function handleRemoveItem({ message, args }) {
   return message.channel.send({ embeds: [embed] });
 }
 
-// ================== BUY ==================
+// ================== BUY - ALL ITEMS GO TO INVENTORY ==================
 async function handleBuy({ message, args, userData, saveUserData }) {
   const itemId = (args[0] || '').toLowerCase();
   let amount = Number(args[1] || 1);
@@ -285,6 +285,7 @@ async function handleBuy({ message, args, userData, saveUserData }) {
   const coins = userData.balance || 0;
   const silv = userData.inventory[SILV_TOKEN_ITEM.name] || 0;
 
+  // ---- BUY SILV TOKEN ----
   if (itemId === SILV_TOKEN_ITEM.id) {
     const totalPrice = SILV_TOKEN_ITEM.priceCoins * amount;
     if (coins < totalPrice) {
@@ -302,10 +303,98 @@ async function handleBuy({ message, args, userData, saveUserData }) {
 
     userData.balance = coins - totalPrice;
     userData.inventory[SILV_TOKEN_ITEM.name] = (userData.inventory[SILV_TOKEN_ITEM.name] || 0) + amount;
+  } else {
+    // ---- BUY NORMAL ITEM ----
+    const item = await ShopItem.findOne({ itemId });
+    if (!item) {
+      const embed = new EmbedBuilder()
+        .setTitle('✧˚₊‧ ✖ ITEM NOT FOUND ‧₊˚✧')
+        .setDescription(`No item with ID \`${itemId}\` exists in the shop.`)
+        .setColor('#e74c3c');
+      return message.channel.send({ embeds: [embed] });
+    }
 
-    await saveUserData({ balance: userData.balance, inventory: userData.inventory });
+    // Force amount = 1 for roles
+    if (item.roleId && amount > 1) amount = 1;
+    
+    const totalCoins = item.priceCoins * amount;
+    const totalSilv = item.priceSilv * amount;
 
-    const embed = new EmbedBuilder()
+    // Payment logic
+    if (item.priceSilv > 0) {
+      if (silv < totalSilv) {
+        const missing = totalSilv - silv;
+        const embed = new EmbedBuilder()
+          .setTitle('✧˚₊‧ ✖ NOT ENOUGH SILV ‧₊˚✧')
+          .setDescription([
+            `**Needed**   »  ${totalSilv} ${SILV_TOKEN_ITEM.emoji}`,
+            `**You have** »  ${silv} ${SILV_TOKEN_ITEM.emoji}`,
+            `**Missing**  »  ${missing} ${SILV_TOKEN_ITEM.emoji}`,
+          ].join('\n'))
+          .setColor('#e74c3c');
+        return message.channel.send({ embeds: [embed] });
+      }
+      userData.inventory[SILV_TOKEN_ITEM.name] = silv - totalSilv;
+    } else if (item.priceCoins > 0) {
+      if (coins < totalCoins) {
+        const missing = totalCoins - coins;
+        const embed = new EmbedBuilder()
+          .setTitle('✧˚₊‧ ✖ NOT ENOUGH COINS ‧₊˚✧')
+          .setDescription([
+            `**Needed**   »  ${totalCoins.toLocaleString()} 💰`,
+            `**You have** »  ${coins.toLocaleString()} 💰`,
+            `**Missing**  »  ${missing.toLocaleString()} 💰`,
+          ].join('\n'))
+          .setColor('#e74c3c');
+        return message.channel.send({ embeds: [embed] });
+      }
+      userData.balance = coins - totalCoins;
+    } else {
+      const embed = new EmbedBuilder()
+        .setTitle('⚠ NO PRICE SET')
+        .setDescription('This item has **no price** configured.')
+        .setColor('#f1c40f');
+      return message.channel.send({ embeds: [embed] });
+    }
+
+    // ADD TO INVENTORY (ALWAYS for non-Silv items)
+    const inventoryKey = item.name;
+    userData.inventory[inventoryKey] = (userData.inventory[inventoryKey] || 0) + amount;
+
+    // Give role if needed
+    if (item.roleId) {
+      try {
+        const member = await message.guild.members.fetch(message.author.id);
+        const role = message.guild.roles.cache.get(item.roleId);
+        if (role && !member.roles.cache.has(item.roleId)) {
+          await member.roles.add(role);
+          if (item.roleDays && item.roleDays > 0) {
+            const ms = item.roleDays * 24 * 60 * 60 * 1000;
+            setTimeout(async () => {
+              try {
+                const freshMember = await message.guild.members.fetch(message.author.id);
+                if (freshMember.roles.cache.has(item.roleId)) {
+                  await freshMember.roles.remove(role);
+                }
+              } catch (e) {
+                console.error('Failed to remove timed role:', e);
+              }
+            }, ms);
+          }
+        }
+      } catch (err) {
+        console.error('SHOP ROLE ERROR:', err);
+      }
+    }
+  }
+
+  // Save data
+  await saveUserData({ balance: userData.balance, inventory: userData.inventory });
+
+  // Success embed
+  let embed;
+  if (itemId === SILV_TOKEN_ITEM.id) {
+    embed = new EmbedBuilder()
       .setTitle('˗ˏˋ 𐙚 ✅ PURCHASE COMPLETE 𐙚 ˎˊ˗')
       .setDescription(`꒰ঌ You bought **${amount}x** ${SILV_TOKEN_ITEM.emoji} **${SILV_TOKEN_ITEM.name}** ໒꒱`)
       .addFields(
@@ -315,116 +404,30 @@ async function handleBuy({ message, args, userData, saveUserData }) {
       .setColor('#27ae60')
       .setTimestamp()
       .setFooter({ text: 'System • Shop' });
-    return message.channel.send({ embeds: [embed] });
-  }
-
-  const item = await ShopItem.findOne({ itemId });
-  if (!item) {
-    const embed = new EmbedBuilder()
-      .setTitle('✧˚₊‧ ✖ ITEM NOT FOUND ‧₊˚✧')
-      .setDescription(`No item with ID \`${itemId}\` exists in the shop.`)
-      .setColor('#e74c3c');
-    return message.channel.send({ embeds: [embed] });
-  }
-
-  if (item.roleId && amount > 1) amount = 1;
-  const totalCoins = item.priceCoins * amount;
-  const totalSilv = item.priceSilv * amount;
-
-  if (item.priceSilv > 0) {
-    if (silv < totalSilv) {
-      const missing = totalSilv - silv;
-      const embed = new EmbedBuilder()
-        .setTitle('✧˚₊‧ ✖ NOT ENOUGH SILV ‧₊˚✧')
-        .setDescription([
-          `**Needed**   »  ${totalSilv} ${SILV_TOKEN_ITEM.emoji}`,
-          `**You have** »  ${silv} ${SILV_TOKEN_ITEM.emoji}`,
-          `**Missing**  »  ${missing} ${SILV_TOKEN_ITEM.emoji}`,
-        ].join('\n'))
-        .setColor('#e74c3c');
-      return message.channel.send({ embeds: [embed] });
-    }
-    userData.inventory[SILV_TOKEN_ITEM.name] = (userData.inventory[SILV_TOKEN_ITEM.name] || 0) - totalSilv;
-  } else if (item.priceCoins > 0) {
-    if (coins < totalCoins) {
-      const missing = totalCoins - coins;
-      const embed = new EmbedBuilder()
-        .setTitle('✧˚₊‧ ✖ NOT ENOUGH COINS ‧₊˚✧')
-        .setDescription([
-          `**Needed**   »  ${totalCoins.toLocaleString()} 💰`,
-          `**You have** »  ${coins.toLocaleString()} 💰`,
-          `**Missing**  »  ${missing.toLocaleString()} 💰`,
-        ].join('\n'))
-        .setColor('#e74c3c');
-      return message.channel.send({ embeds: [embed] });
-    }
-    userData.balance = coins - totalCoins;
   } else {
-    const embed = new EmbedBuilder()
-      .setTitle('⚠ NO PRICE SET')
-      .setDescription('This item has **no price** configured.')
-      .setColor('#f1c40f');
-    return message.channel.send({ embeds: [embed] });
-  }
+    const item = await ShopItem.findOne({ itemId });
+    const fields = [
+      { name: '💰 New Balance', value: `**${userData.balance.toLocaleString()}** coins`, inline: true },
+      { name: `${SILV_TOKEN_ITEM.emoji} Silv tokens`, value: `**${userData.inventory[SILV_TOKEN_ITEM.name] || 0}x**`, inline: true },
+      { name: '📦 Total Owned', value: `**${userData.inventory[item.name] || amount}x**`, inline: false },
+    ];
 
-  if (item.roleId) {
-    try {
-      const member = await message.guild.members.fetch(message.author.id);
-      const role = message.guild.roles.cache.get(item.roleId);
-      if (role && !member.roles.cache.has(item.roleId)) {
-        await member.roles.add(role);
-        if (item.roleDays && item.roleDays > 0) {
-          const ms = item.roleDays * 24 * 60 * 60 * 1000;
-          setTimeout(async () => {
-            try {
-              const freshMember = await message.guild.members.fetch(message.author.id);
-              if (freshMember.roles.cache.has(item.roleId)) {
-                await freshMember.roles.remove(role);
-              }
-            } catch (e) {
-              console.error('Failed to remove timed role:', e);
-            }
-          }, ms);
-        }
-      }
-    } catch (err) {
-      console.error('SHOP ROLE ERROR:', err);
+    if (item.roleId) {
+      fields.splice(2, 0, {
+        name: '👑 Role',
+        value: item.roleDays && item.roleDays > 0 ? `<@&${item.roleId}> for **${item.roleDays} day(s)**` : `<@&${item.roleId}> (permanent)`,
+        inline: false,
+      });
     }
+
+    embed = new EmbedBuilder()
+      .setTitle('˗ˏˋ 𐙚 ✅ PURCHASE COMPLETE 𐙚 ˎˊ˗')
+      .setDescription(`꒰ঌ You bought **${amount}x** **${item.name}** \`(${item.itemId})\` ໒꒱`)
+      .addFields(fields)
+      .setColor('#27ae60')
+      .setTimestamp()
+      .setFooter({ text: 'System • Shop' });
   }
-
-  await saveUserData({ balance: userData.balance, inventory: userData.inventory });
-
-  if (!item.roleId) {
-    const key = item.name;
-    userData.inventory[key] = (userData.inventory[key] || 0) + amount;
-  }
-
-  const fields = [
-    { name: '💰 New Balance', value: `**${userData.balance.toLocaleString()}** coins`, inline: true },
-    { name: `${SILV_TOKEN_ITEM.emoji} Silv tokens`, value: `**${userData.inventory[SILV_TOKEN_ITEM.name] || 0}x**`, inline: true },
-  ];
-
-  if (item.roleId) {
-    fields.push({
-      name: '👑 Role',
-      value: item.roleDays && item.roleDays > 0 ? `<@&${item.roleId}> for **${item.roleDays} day(s)**` : `<@&${item.roleId}> (permanent)`,
-      inline: false,
-    });
-  } else {
-    fields.push({
-      name: '📦 Total Owned',
-      value: `**${userData.inventory[item.name] || amount}x**`,
-      inline: false,
-    });
-  }
-
-  const embed = new EmbedBuilder()
-    .setTitle('˗ˏˋ 𐙚 ✅ PURCHASE COMPLETE 𐙚 ˎˊ˗')
-    .setDescription(`꒰ঌ You bought **${amount}x** **${item.name}** \`(${item.itemId})\` ໒꒱`)
-    .addFields(fields)
-    .setColor('#27ae60')
-    .setTimestamp()
-    .setFooter({ text: 'System • Shop' });
 
   return message.channel.send({ embeds: [embed] });
 }
@@ -516,5 +519,4 @@ async function showShop({ message }) {
   embed.setFooter({ text: 'Shop refreshes every 4 hours', iconURL: message.author.displayAvatarURL() });
   return message.channel.send({ embeds: [embed] });
 }
-    
-
+  
