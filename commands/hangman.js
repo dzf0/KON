@@ -13,7 +13,7 @@ const hangmanStages = [
   '``````'
 ];
 
-const ADMIN_ROLE_ID = '1382513369801555988'; // Your admin role ID
+const ADMIN_ROLE_ID = '1454818862397653074'; // Your admin role ID
 const GAME_CHANNEL_ID = '1401925188991582338'; // Your game channel ID
 
 module.exports = {
