@@ -1,6 +1,6 @@
 const { EmbedBuilder } = require('discord.js');
 
-const AUTH_ROLE_ID = '1382513369801555988';
+const AUTH_ROLE_ID = '1454818862397653074';
 const GAME_CHANNEL_ID = '1401925188991582338';
 
 let activeScramble = null;
