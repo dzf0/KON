@@ -127,7 +127,7 @@ async function handleAddItem({ message, args }) {
       .setTitle('˗ˏˋ 📜 SHOP ADD USAGE ˎˊ˗')
       .setDescription(
         [
-          '```
+          '`````',
           '.shop add (name with spaces) (item_id) (category) (priceCoins) (priceSilv) (chance 0-100) [roleId] [roleDays]',
           '',
           'Example:',
@@ -253,9 +253,7 @@ async function handleBuy({ message, args, userData, saveUserData }) {
   if (!itemId) {
     const embed = new EmbedBuilder()
       .setTitle('˗ˏˋ 📜 SHOP BUY USAGE ˎˊ˗')
-      .setDescription(
-        '``````'
-      )
+      .setDescription('``````')
       .setColor('#f1c40f');
     return message.channel.send({ embeds: [embed] });
   }
@@ -577,5 +575,6 @@ async function showShop({ message }) {
 
   return message.channel.send({ embeds: [embed] });
                                }
+
 
 
