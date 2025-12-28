@@ -30,7 +30,7 @@ const CATEGORY_EMOJIS = {
   Cosmetics: '✨',
   Exclusive: '💎',
   Mythical: '🧿',
-  'Silv Shop': '<a:1382615035460980777:1403025148679950426>'
+  'Silv Shop': '<:zzPlatinum:1423148989590540430>'
 };
 
 let shopCache = {
@@ -577,4 +577,5 @@ async function showShop({ message }) {
 
   return message.channel.send({ embeds: [embed] });
                                }
+
 
