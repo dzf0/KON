@@ -1,6 +1,6 @@
 const { EmbedBuilder } = require('discord.js');
 
-const ADMIN_ROLE_ID = '1382513369801555988'; // Replace with your admin role ID
+const ADMIN_ROLE_ID = '1454818862397653074'; // Replace with your admin role ID
 
 module.exports = {
   name: 'adminlogs',
