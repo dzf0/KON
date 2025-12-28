@@ -174,7 +174,7 @@ async function handleAddItem({ message, args }) {
       .setTitle('˗ˏˋ 📜 SHOP ADD USAGE ˎˊ˗')
       .setDescription(
         [
-          '```',
+          '```
           '.shop add [name] (item_id) [category words] (priceCoins) (priceSilv) (chance)',
           '[name] = optional, ( ) = required',
           '',
@@ -539,5 +539,4 @@ async function showShop({ message }) {
   embed.setFooter({ text: 'Shop refreshes every 4 hours', iconURL: message.author.displayAvatarURL() });
   return message.channel.send({ embeds: [embed] });
 }
-
-
+  
