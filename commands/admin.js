@@ -19,7 +19,7 @@ function toProperCase(str) {
 module.exports = {
   name: 'admin',
   description:
-    'Admin commands: give/remove currency, silv tokens or keys, reset user data, spawn keys.',
+    'Admin commands: give/remove currency, silv tokens, keys, or inventory items; reset user data, spawn keys.',
   async execute({ message, args, getUserData, keydrop, logAdminAction }) {
     if (args.length < 1) {
       return message.channel.send({
@@ -67,18 +67,192 @@ module.exports = {
     // ===== GIVE / REMOVE =====
     if (subcommand === 'give' || subcommand === 'remove') {
       const type = args[1]?.toLowerCase();
-      if (!['currency', 'keys', 'silv'].includes(type)) {
+      if (!['currency', 'keys', 'silv', 'item'].includes(type)) {
         return message.channel.send({
           embeds: [
             new EmbedBuilder()
               .setColor('#F5E6FF')
               .setTitle('✧˚₊‧ 𝕀𝕟𝕧𝕒𝕝𝕚𝕕 𝕋𝕪𝕡𝕖 ‧₊˚✧')
-              .setDescription('Type must be "currency", "silv" or "keys".')
+              .setDescription('Type must be "currency", "silv", "keys", or "item".')
               .setFooter({ text: 'System • Argument Error' }),
           ],
         });
       }
 
+      // ===== REMOVE/GIVE ITEM (CUSTOM INVENTORY ITEM WITH SPACES + AMOUNT) =====
+      if (type === 'item') {
+        const userMention = message.mentions.users.first();
+        if (!userMention) {
+          return message.channel.send({
+            embeds: [
+              new EmbedBuilder()
+                .setColor('#F5E6FF')
+                .setTitle('✧˚₊‧ 𝕀𝕟𝕧𝕒𝕝𝕚𝕕 𝕌𝕤𝕒𝕘𝕖 ‧₊˚✧')
+                .setDescription(
+                  `Usage: \`.admin ${subcommand} item <item name> <amount> @user\`\n` +
+                  'Example: `.admin remove item Silv token 5 @user`',
+                )
+                .setFooter({ text: 'System • Usage Hint' }),
+            ],
+          });
+        }
+
+        // Extract full args and find amount (last arg before mention)
+        const mentionString = `<@${userMention.id}>`;
+        const fullArgs = args.slice(2).join(' '); // everything after "remove item"
+        const withoutMention = fullArgs.replace(mentionString, '').trim();
+        
+        // Split to get amount (last word) and item name (rest)
+        const parts = withoutMention.split(' ');
+        const amountStr = parts[parts.length - 1];
+        const amount = parseInt(amountStr);
+        
+        if (isNaN(amount) || amount <= 0) {
+          return message.channel.send({
+            embeds: [
+              new EmbedBuilder()
+                .setColor('#F5E6FF')
+                .setTitle('✧˚₊‧ 𝕀𝕟𝕧𝕒𝕝𝕚𝕕 𝔸𝕞𝕠𝕦𝕟𝕥 ‧₊˚✧')
+                .setDescription(
+                  'Please provide a valid amount.\n' +
+                  'Example: `.admin remove item Silv token 5 @user`',
+                )
+                .setFooter({ text: 'System • Usage Hint' }),
+            ],
+          });
+        }
+
+        const itemName = parts.slice(0, -1).join(' ').trim();
+
+        if (!itemName) {
+          return message.channel.send({
+            embeds: [
+              new EmbedBuilder()
+                .setColor('#F5E6FF')
+                .setTitle('✧˚₊‧ 𝕀𝕟𝕧𝕒𝕝𝕚𝕕 𝕌𝕤𝕒𝕘𝕖 ‧₊˚✧')
+                .setDescription(
+                  'Please provide an item name.\n' +
+                  'Example: `.admin remove item Mystery Box 3 @user`',
+                )
+                .setFooter({ text: 'System • Usage Hint' }),
+            ],
+          });
+        }
+
+        const userId = userMention.id;
+        const targetData = await getUserData(userId);
+        const User = require('mongoose').model('User');
+
+        targetData.inventory = targetData.inventory || {};
+
+        if (subcommand === 'remove') {
+          const currentAmount = targetData.inventory[itemName] || 0;
+
+          if (currentAmount === 0) {
+            return message.channel.send({
+              embeds: [
+                new EmbedBuilder()
+                  .setColor('#F5E6FF')
+                  .setTitle('✧˚₊‧ 𝕀𝕥𝕖𝕞 ℕ𝕠𝕥 𝔽𝕠𝕦𝕟𝕕 ‧₊˚✧')
+                  .setDescription(
+                    `${userMention.username} does not have **${itemName}** in their inventory.`,
+                  )
+                  .setFooter({ text: 'System • Inventory Check' }),
+              ],
+            });
+          }
+
+          if (currentAmount < amount) {
+            return message.channel.send({
+              embeds: [
+                new EmbedBuilder()
+                  .setColor('#F5E6FF')
+                  .setTitle('✧˚₊‧ 𝕀𝕟𝕤𝕦𝕗𝕗𝕚𝕔𝕚𝕖𝕟𝕥 𝕀𝕥𝕖𝕞𝕤 ‧₊˚✧')
+                  .setDescription(
+                    `${userMention.username} only has **${currentAmount}x ${itemName}** but you tried to remove **${amount}x**.`,
+                  )
+                  .setFooter({ text: 'System • Inventory Check' }),
+              ],
+            });
+          }
+
+          targetData.inventory[itemName] = currentAmount - amount;
+          if (targetData.inventory[itemName] === 0) {
+            delete targetData.inventory[itemName];
+          }
+
+          await User.updateOne(
+            { userId },
+            { $set: { inventory: targetData.inventory } },
+            { upsert: true },
+          );
+
+          await logAdminAction(
+            message.author.id,
+            message.author.username,
+            'admin',
+            'Remove Item',
+            userId,
+            userMention.username,
+            `Removed ${amount}x ${itemName}`,
+          );
+
+          return message.channel.send({
+            embeds: [
+              new EmbedBuilder()
+                .setColor('#F5E6FF')
+                .setTitle('✧˚₊‧ 𝕀𝕥𝕖𝕞 ℝ𝕖𝕞𝕠𝕧𝕖𝕕 ‧₊˚✧')
+                .setDescription(
+                  [
+                    `Removed **${amount}x ${itemName}** from ${userMention.username}.`,
+                    `Remaining: **${targetData.inventory[itemName] || 0}x**`,
+                    '',
+                    '₊˚ෆ 𝔠𝔢𝔩𝔢𝔰𝔱𝔦𝔞𝔩 𝔩𝔢𝔡𝔤𝔢𝔯 𝔲𝔭𝔡𝔞𝔱𝔢𝔡 ෆ˚₊',
+                  ].join('\n'),
+                )
+                .setFooter({ text: 'System • Admin Action Logged' }),
+            ],
+          });
+        } else {
+          // GIVE ITEM
+          targetData.inventory[itemName] = (targetData.inventory[itemName] || 0) + amount;
+
+          await User.updateOne(
+            { userId },
+            { $set: { inventory: targetData.inventory } },
+            { upsert: true },
+          );
+
+          await logAdminAction(
+            message.author.id,
+            message.author.username,
+            'admin',
+            'Give Item',
+            userId,
+            userMention.username,
+            `Gave ${amount}x ${itemName}`,
+          );
+
+          return message.channel.send({
+            embeds: [
+              new EmbedBuilder()
+                .setColor('#F5E6FF')
+                .setTitle('✧˚₊‧ 𝕀𝕥𝕖𝕞 𝔾𝕚𝕧𝕖𝕟 ‧₊˚✧')
+                .setDescription(
+                  [
+                    `Gave **${amount}x ${itemName}** to ${userMention.username}.`,
+                    `New total: **${targetData.inventory[itemName]}x**`,
+                    '',
+                    '˗ˏˋ 𐙚 𝔦𝔫𝔳𝔢𝔫𝔱𝔬𝔯𝔶 𝔥𝔞𝔰 𝔟𝔢𝔢𝔫 𝔟𝔩𝔢𝔰𝔰𝔢𝔡 𐙚 ˎˊ˗',
+                  ].join('\n'),
+                )
+                .setFooter({ text: 'System • Admin Action Logged' }),
+            ],
+          });
+        }
+      }
+
+      // ===== EXISTING LOGIC FOR KEYS/SILV/CURRENCY =====
       let rarityKey = null;
       let amountIndex = 2;
 
@@ -587,5 +761,3 @@ module.exports = {
     });
   },
 };
-
-

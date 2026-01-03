@@ -125,6 +125,8 @@ const COOLDOWN_MS = 5000;
 
 // Load commands dynamically (exclude keydrop.js)
 const commandsPath = path.join(__dirname, 'commands');
+let commandsModule = null; // Store reference to commands.js
+
 if (fs.existsSync(commandsPath)) {
   const commandFiles = fs
     .readdirSync(commandsPath)
@@ -136,6 +138,11 @@ if (fs.existsSync(commandsPath)) {
       if (command.name && command.execute) {
         client.commands.set(command.name, command);
         console.log(`Loaded command: ${command.name}`);
+        
+        // Store reference to commands.js module
+        if (command.name === 'commands') {
+          commandsModule = command;
+        }
       }
     } catch (error) {
       console.error(`Error loading command ${file}:`, error);
@@ -234,9 +241,24 @@ client.on('messageCreate', async (message) => {
   const command = client.commands.get(commandName);
   if (!command) return;
 
+  // ===== CHECK IF COMMANDS ARE DISABLED =====
+  if (commandsModule && !commandsModule.areCommandsEnabled()) {
+    // If commands are disabled and user is not admin, block everything (silent)
+    if (!commandsModule.canToggleCommands(message.member)) {
+      return;
+    }
+  }
+
+  // If trying to use .commands command, check admin permission first (silent block)
+  if (commandName === 'commands') {
+    if (!commandsModule || !commandsModule.canToggleCommands(message.member)) {
+      return;
+    }
+  }
+
   // Keys channel restriction
   const KEYS_CHANNEL_ID = '1401925188991582338';
-  const allowedInKeysChannel = ['claim', 'redeem', 'hangman', 'inventory', 'inv', 'bal', 'baltop', 'profile'];
+  const allowedInKeysChannel = ['admin','claim', 'redeem', 'hangman', 'inventory', 'inv', 'bal', 'baltop', 'profile', 'setchannel','commands'];
 
   if (message.channel.id === KEYS_CHANNEL_ID && !allowedInKeysChannel.includes(command.name)) {
     return;

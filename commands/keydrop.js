@@ -3,7 +3,15 @@ const { EmbedBuilder } = require('discord.js');
 
 const KEYDROP_CHANNEL_ID = '1401925188991582338';
 
+// Admin role and user IDs for keydrop channel control
+const KEYDROP_ADMIN_ROLE_ID = '1454818862397653074';
+const KEYDROP_ADMIN_USER_IDS = [
+  '1349792214124986419',
+];
+
 let currentKey = null;
+let activeKeydropChannel = KEYDROP_CHANNEL_ID;
+let keydropsEnabled = true; // Toggle for automatic keydrops
 
 // Rarity chances are *within* the overall drop rate
 const rarities = [
@@ -25,11 +33,29 @@ function getRandomRarity() {
   return rarities[rarities.length - 1].name;
 }
 
+// Check if user can manage keydrop settings
+function canManageKeydrop(member) {
+  const hasRole = member.roles.cache.has(KEYDROP_ADMIN_ROLE_ID);
+  const isWhitelisted = KEYDROP_ADMIN_USER_IDS.includes(member.id);
+  return hasRole || isWhitelisted;
+}
+
+function areKeydropsEnabled() {
+  return keydropsEnabled;
+}
+
+function setKeydropsEnabled(state) {
+  keydropsEnabled = state;
+}
+
 async function handleKeyDrop(message, client) {
   if (message.author.bot) return;
 
-  // Only drop in the keydrop channel
-  if (message.channel.id !== KEYDROP_CHANNEL_ID) return;
+  // Only drop in the active keydrop channel
+  if (message.channel.id !== activeKeydropChannel) return;
+
+  // Check if keydrops are enabled
+  if (!keydropsEnabled) return;
 
   // Chance to expire an existing unclaimed key
   if (currentKey && !currentKey.claimed) {
@@ -50,7 +76,7 @@ async function handleKeyDrop(message, client) {
 
   // 2.5% chance per message to spawn a new key if none active
   if (!currentKey && Math.random() <= 0.025) {
-    const rarityName = getRandomRarity(); // string like "Legendary"
+    const rarityName = getRandomRarity();
 
     currentKey = {
       rarity: rarityName,
@@ -76,9 +102,91 @@ async function handleKeyDrop(message, client) {
   }
 }
 
+// Command to set keydrop channel
+async function setKeydropChannel(message, args) {
+  const member = message.member;
+
+  if (!canManageKeydrop(member)) {
+    return message.channel.send({
+      embeds: [
+        new EmbedBuilder()
+          .setColor('#F5E6FF')
+          .setTitle('˗ˏˋ 𐙚 𝔸𝕔𝕔𝕖𝕤𝕤 𝔻𝕖𝕟𝕚𝕖𝕕 𐙚 ˎˊ˗')
+          .setDescription(
+            [
+              '꒰ঌ 𝔒𝔫𝔩𝔶 𝔞𝔡𝔪𝔦𝔫𝔰 𝔠𝔞𝔫 𝔠𝔥𝔞𝔫𝔤𝔢 𝔨𝔢𝔶𝔡𝔯𝔬𝔭 𝔰𝔢𝔱𝔱𝔦𝔫𝔤𝔰 ໒꒱',
+              '',
+              'You need the admin role or be whitelisted.',
+            ].join('\n')
+          )
+          .setFooter({ text: 'System • Permission Check' }),
+      ],
+    });
+  }
+
+  const channelId = args[0];
+
+  if (!channelId) {
+    return message.channel.send({
+      embeds: [
+        new EmbedBuilder()
+          .setColor('#F5E6FF')
+          .setTitle('✧˚₊‧ 𝕀𝕟𝕧𝕒𝕝𝕚𝕕 𝕌𝕤𝕒𝕘𝕖 ‧₊˚✧')
+          .setDescription(
+            [
+              'Usage: `.setchannel <channel_id>`',
+              '',
+              'Example: `.setchannel 1401925188991582338`',
+              '',
+              `**Current keydrop channel:** <#${activeKeydropChannel}>`,
+            ].join('\n')
+          )
+          .setFooter({ text: 'System • Usage Hint' }),
+      ],
+    });
+  }
+
+  const channel = message.client.channels.cache.get(channelId);
+  if (!channel) {
+    return message.channel.send({
+      embeds: [
+        new EmbedBuilder()
+          .setColor('#F5E6FF')
+          .setTitle('✧˚₊‧ ℂ𝕙𝕒𝕟𝕟𝕖𝕝 ℕ𝕠𝕥 𝔽𝕠𝕦𝕟𝕕 ‧₊˚✧')
+          .setDescription(
+            `Channel with ID ${channelId} not found. Make sure the ID is correct.`
+          )
+          .setFooter({ text: 'System • Channel Check' }),
+      ],
+    });
+  }
+
+  const oldChannelId = activeKeydropChannel;
+  activeKeydropChannel = channelId;
+
+  return message.channel.send({
+    embeds: [
+      new EmbedBuilder()
+        .setColor('#F5E6FF')
+        .setTitle('✧˚₊‧ 🔑 𝕂𝕖𝕪𝕕𝕣𝕠𝕡 ℂ𝕙𝕒𝕟𝕟𝕖𝕝 𝕌𝕡𝕕𝕒𝕥𝕖𝕕 ‧₊˚✧')
+        .setDescription(
+          [
+            '꒰ঌ 𝔱𝔥𝔢 𝔠𝔢𝔩𝔢𝔰𝔱𝔦𝔞𝔩 𝔭𝔞𝔱𝔥 𝔥𝔞𝔰 𝔟𝔢𝔢𝔫 𝔯𝔢𝔡𝔦𝔯𝔢𝔠𝔱𝔢𝔡 ໒꒱',
+            '',
+            `**Previous channel:** <#${oldChannelId}>`,
+            `**New channel:** <#${activeKeydropChannel}>`,
+            '',
+            'Keys will now drop in the new channel.',
+          ].join('\n')
+        )
+        .setFooter({ text: 'System • Keydrop Control' })
+        .setTimestamp(),
+    ],
+  });
+}
+
 // Used by admin.js: keydrop.spawnKey(rarityKey, channelId, message.client)
 async function spawnKey(rarity, channelId, client) {
-  // rarity is a STRING like "Legendary"
   if (currentKey && !currentKey.claimed) {
     return {
       success: false,
@@ -142,6 +250,10 @@ function getCurrentKey() {
   return currentKey;
 }
 
+function getActiveChannel() {
+  return activeKeydropChannel;
+}
+
 module.exports = {
   handleKeyDrop,
   spawnKey,
@@ -149,4 +261,9 @@ module.exports = {
   getCurrentKey,
   getRandomRarity,
   rarities,
+  setKeydropChannel,
+  canManageKeydrop,
+  getActiveChannel,
+  areKeydropsEnabled,
+  setKeydropsEnabled,
 };

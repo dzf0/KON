@@ -91,42 +91,59 @@ function isShopAdmin(member) {
   return hasRole || isWhitelisted;
 }
 
-// ================== PERFECTLY FIXED PARSE - EXACT MATCHING ==================
-function parseAddArgs(args) {
-  if (args.length < 6) return null;
-
-  // PERFECT parsing: name itemId categoryWords... priceCoins priceSilv spawnChance
-  const name = args[0];                    // 1st = name
-  const itemId = args[1].toLowerCase();    // 2nd = itemId
+// ================== PARSE WITH QUOTE SUPPORT ==================
+function parseQuotedArgs(argsString) {
+  const parts = [];
+  let current = '';
+  let inQuotes = false;
   
-  // Find where numbers start (last 3 args)
-  const priceCoins = Number(args[args.length - 3]);
-  const priceSilv = Number(args[args.length - 2]);
-  const spawnChance = Number(args[args.length - 1]);
-
-  // Category = everything between itemId and numbers
-  let categoryParts = [];
-  for (let i = 2; i < args.length - 3; i++) {
-    const num = Number(args[i]);
-    if (Number.isNaN(num)) {
-      categoryParts.push(args[i]);
+  for (let i = 0; i < argsString.length; i++) {
+    const char = argsString[i];
+    
+    if (char === '"') {
+      inQuotes = !inQuotes;
+    } else if (char === ' ' && !inQuotes) {
+      if (current) {
+        parts.push(current);
+        current = '';
+      }
     } else {
-      break;
+      current += char;
     }
   }
   
-  const category = categoryParts.join(' ') || 'Items';
+  if (current) parts.push(current);
+  
+  return parts;
+}
+
+function parseAddArgs(args) {
+  // Join args back and parse with quotes
+  const argsString = args.join(' ');
+  const parsed = parseQuotedArgs(argsString);
+  
+  if (parsed.length < 5) return null;
+
+  const name = parsed[0];
+  const category = parsed[1];
+  const priceCoins = Number(parsed[2]);
+  const priceSilv = Number(parsed[3]);
+  const spawnChance = Number(parsed[4]);
+  
+  // Generate itemId from name (lowercase, replace spaces with underscores)
+  const itemId = name.toLowerCase().replace(/\s+/g, '_');
+  
   let roleId = null;
   let roleDays = 0;
 
-  // Handle role args if present (9+ args total)
-  if (args.length >= 9) {
-    roleId = args[args.length - 3];
-    roleDays = Number(args[args.length - 1]) || 0;
+  // Handle role args if present
+  if (parsed.length >= 7) {
+    roleId = parsed[5];
+    roleDays = Number(parsed[6]) || 0;
   }
 
-  // FINAL VALIDATION
-  if (!itemId || !category || 
+  // VALIDATION
+  if (!name || !category || 
       Number.isNaN(priceCoins) || priceCoins < 0 ||
       Number.isNaN(priceSilv) || priceSilv < 0 ||
       Number.isNaN(spawnChance) || spawnChance < 0 || spawnChance > 100) {
@@ -154,11 +171,14 @@ async function handleAddItem({ message, args }) {
       .setDescription(
         [
           '```',
-          '.shop add (name) (itemId) [category words] (coins) (silv) (chance%) [roleId] [days]',
+          '.shop add "item name" "category" (coins) (silv) (chance%) ["roleId"] [days]',
           '',
-          '✅ .shop add Invites invite Silv Shop 0 1 60',
-          '✅ .shop add Sword sword Weapons 1000 0 25',
-          '✅ .shop add VIP vip "VIP Lounge" 0 5 75 123456789 30',
+          '✅ .shop add "Mystery Box" "Exclusive" 0 1 60',
+          '✅ .shop add "Silv Invites" "Silv Shop" 0 1 80',
+          '✅ .shop add "Diamond Sword" "Weapons" 1000 0 25',
+          '✅ .shop add "VIP Role" "Special Roles" 0 5 75 "123456789" 30',
+          '',
+          'Note: Use quotes for multi-word names/categories',
           '```',
         ].join('\n'),
       )
@@ -231,11 +251,11 @@ async function handleRemoveItem({ message, args }) {
     return message.channel.send({ embeds: [embed] });
   }
 
-  const itemId = (args[0] || '').toLowerCase();
+  const itemId = (args.join(' ') || '').toLowerCase().replace(/\s+/g, '_');
   if (!itemId) {
     const embed = new EmbedBuilder()
       .setTitle('˗ˏˋ 📜 SHOP REMOVE USAGE ˎˊ˗')
-      .setDescription('``````')
+      .setDescription('```\n.shop remove item_id\n\nExample: .shop remove mystery_box\n```')
       .setColor('#f1c40f');
     return message.channel.send({ embeds: [embed] });
   }
@@ -274,7 +294,7 @@ async function handleBuy({ message, args, userData, saveUserData }) {
   if (!itemId) {
     const embed = new EmbedBuilder()
       .setTitle('˗ˏˋ 📜 SHOP BUY USAGE ˎˊ˗')
-      .setDescription('``````')
+      .setDescription('```\n.shop buy item_id [amount]\n\nExample: .shop buy mystery_box 2\n```')
       .setColor('#f1c40f');
     return message.channel.send({ embeds: [embed] });
   }
@@ -519,4 +539,3 @@ async function showShop({ message }) {
   embed.setFooter({ text: 'Shop refreshes every 4 hours', iconURL: message.author.displayAvatarURL() });
   return message.channel.send({ embeds: [embed] });
 }
-  
