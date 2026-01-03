@@ -5,9 +5,7 @@ const SILV_TOKEN_KEY = 'Silv token';
 
 // Configure your role rewards here - add as many as you want
 const ROLE_REWARDS = [
-  { roleId: '1234567890123456789', weight: 5 },   // Replace with actual role IDs
-  { roleId: '9876543210987654321', weight: 3 },
-  { roleId: '1111111111111111111', weight: 1 },   // Lower weight = rarer
+  { roleId: '1457075680746541273', weight: 5 },   // Lower weight = rarer
   // Add more roles here
 ];
 
