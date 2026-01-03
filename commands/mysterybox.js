@@ -77,11 +77,16 @@ module.exports = {
       });
     }
     
-    // Get random reward BEFORE removing the box
+    // Remove one Mystery Box
+    userData.inventory[MYSTERY_BOX_KEY]--;
+    if (userData.inventory[MYSTERY_BOX_KEY] === 0) {
+      delete userData.inventory[MYSTERY_BOX_KEY];
+    }
+    
+    // Get random reward
     const rewardType = getRandomReward();
     let rewardMessage = '';
     let rewardEmoji = '';
-    let roleSuccess = false;
     
     if (rewardType.type === 'role') {
       // Role reward
@@ -92,77 +97,24 @@ module.exports = {
         try {
           // Check if member already has the role
           if (message.member.roles.cache.has(roleId)) {
-            rewardEmoji = '⚠️';
-            rewardMessage = `You already have the **${role.name}** role! (No box consumed)`;
-            
-            return message.channel.send({
-              embeds: [
-                new EmbedBuilder()
-                  .setColor('#F5E6FF')
-                  .setTitle('✧˚₊‧ 📦 𝕄𝕪𝕤𝕥𝕖𝕣𝕪 𝔹𝕠𝕩 ‧₊˚✧')
-                  .setDescription(
-                    [
-                      '꒰ঌ 𝔶𝔬𝔲 𝔞𝔩𝔯𝔢𝔞𝔡𝔶 𝔥𝔞𝔳𝔢 𝔱𝔥𝔦𝔰 𝔯𝔬𝔩𝔢 ໒꒱',
-                      '',
-                      `${rewardEmoji} ${rewardMessage}`,
-                      '',
-                      `**Remaining Mystery Boxes:** ${userData.inventory[MYSTERY_BOX_KEY] || 0}`,
-                    ].join('\n')
-                  )
-                  .setFooter({ text: 'System • Role Already Owned' }),
-              ],
-            });
+            // Give 1 Silv token instead
+            userData.inventory[SILV_TOKEN_KEY] = (userData.inventory[SILV_TOKEN_KEY] || 0) + 1;
+            rewardEmoji = '✨';
+            rewardMessage = `**1x Silv Token** (you already have the **${role.name}** role)`;
+          } else {
+            // Add the new role
+            await message.member.roles.add(roleId);
+            rewardEmoji = '👑';
+            rewardMessage = `**${role.name}** role!`;
           }
-          
-          await message.member.roles.add(roleId);
-          rewardEmoji = '👑';
-          rewardMessage = `**${role.name}** role!`;
-          roleSuccess = true;
         } catch (error) {
           console.error('Error adding role:', error);
           rewardEmoji = '❌';
-          rewardMessage = `Failed to add role (permission error) - Box not consumed`;
-          
-          return message.channel.send({
-            embeds: [
-              new EmbedBuilder()
-                .setColor('#F5E6FF')
-                .setTitle('✧˚₊‧ 📦 𝕄𝕪𝕤𝕥𝕖𝕣𝕪 𝔹𝕠𝕩 𝔼𝕣𝕣𝕠𝕣 ‧₊˚✧')
-                .setDescription(
-                  [
-                    '꒰ঌ 𝔰𝔬𝔪𝔢𝔱𝔥𝔦𝔫𝔤 𝔴𝔢𝔫𝔱 𝔴𝔯𝔬𝔫𝔤 ໒꒱',
-                    '',
-                    `${rewardEmoji} ${rewardMessage}`,
-                    '',
-                    'Contact an admin to fix bot permissions.',
-                    `**Remaining Mystery Boxes:** ${userData.inventory[MYSTERY_BOX_KEY] || 0}`,
-                  ].join('\n')
-                )
-                .setFooter({ text: 'System • Permission Error' }),
-            ],
-          });
+          rewardMessage = `Failed to add role (permission error)`;
         }
       } else {
         rewardEmoji = '⚠️';
-        rewardMessage = `Role not found (contact admin) - Box not consumed`;
-        
-        return message.channel.send({
-          embeds: [
-            new EmbedBuilder()
-              .setColor('#F5E6FF')
-              .setTitle('✧˚₊‧ 📦 𝕄𝕪𝕤𝕥𝕖𝕣𝕪 𝔹𝕠𝕩 𝔼𝕣𝕣𝕠𝕣 ‧₊˚✧')
-              .setDescription(
-                [
-                  '꒰ঌ 𝔯𝔬𝔩𝔢 𝔫𝔬𝔱 𝔣𝔬𝔲𝔫𝔡 ໒꒱',
-                  '',
-                  `${rewardEmoji} ${rewardMessage}`,
-                  '',
-                  `**Remaining Mystery Boxes:** ${userData.inventory[MYSTERY_BOX_KEY] || 0}`,
-                ].join('\n')
-              )
-              .setFooter({ text: 'System • Configuration Error' }),
-          ],
-        });
+        rewardMessage = `Role not found (contact admin)`;
       }
       
     } else if (rewardType.type === 'silv') {
@@ -185,12 +137,6 @@ module.exports = {
       userData.inventory['Legendary'] = (userData.inventory['Legendary'] || 0) + amount;
       rewardEmoji = '🔑';
       rewardMessage = `**${amount}x Legendary Key${amount > 1 ? 's' : ''}**!`;
-    }
-    
-    // Remove one Mystery Box (only if we reached here)
-    userData.inventory[MYSTERY_BOX_KEY]--;
-    if (userData.inventory[MYSTERY_BOX_KEY] === 0) {
-      delete userData.inventory[MYSTERY_BOX_KEY];
     }
     
     // Save user data
