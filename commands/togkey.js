@@ -13,7 +13,7 @@ function canToggleKeydrops(member) {
 }
 
 module.exports = {
-  name: 'togglekeydrops',
+  name: 'tkd',
   description: 'Toggle automatic keydrops on/off (admin only)',
   async execute({ message, args, keydrop }) {
     const member = message.member;

@@ -258,7 +258,7 @@ client.on('messageCreate', async (message) => {
 
   // Keys channel restriction
   const KEYS_CHANNEL_ID = '1401925188991582338';
-  const allowedInKeysChannel = ['admin','claim', 'redeem', 'hangman', 'inventory', 'inv', 'bal', 'baltop', 'profile', 'setchannel','commands'];
+  const allowedInKeysChannel = ['tkd','admin','claim', 'redeem', 'hangman', 'inventory', 'inv', 'bal', 'baltop', 'profile', 'setchannel','commands'];
 
   if (message.channel.id === KEYS_CHANNEL_ID && !allowedInKeysChannel.includes(command.name)) {
     return;
