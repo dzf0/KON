@@ -6,11 +6,13 @@ const mongoose = require('mongoose');
 const { Client, GatewayIntentBits, Collection, EmbedBuilder } = require('discord.js');
 const keydrop = require('./commands/keydrop.js');
 
+
 // Start Express server to keep bot awake
 const app = express();
 const PORT = process.env.PORT || 3000;
 app.get('/', (req, res) => res.send('Bot is running'));
 app.listen(PORT, () => console.log(`Web server started on port ${PORT}`));
+
 
 // ===== MONGODB SETUP =====
 const userSchema = new mongoose.Schema({
@@ -24,7 +26,9 @@ const userSchema = new mongoose.Schema({
   profileBanner: { type: String, default: null },
 });
 
+
 const User = mongoose.model('User', userSchema);
+
 
 const adminLogSchema = new mongoose.Schema({
   adminId: { type: String, required: true },
@@ -37,7 +41,9 @@ const adminLogSchema = new mongoose.Schema({
   timestamp: { type: Date, default: Date.now },
 });
 
+
 const AdminLog = mongoose.model('AdminLog', adminLogSchema);
+
 
 async function logAdminAction(
   adminId,
@@ -65,6 +71,7 @@ async function logAdminAction(
   }
 }
 
+
 // ===== DB HELPERS =====
 async function getUserData(userId) {
   let user = await User.findOne({ userId });
@@ -81,9 +88,11 @@ async function getUserData(userId) {
   return user.toObject();
 }
 
+
 async function saveUserData(userId, userData) {
   await User.updateOne({ userId }, { $set: userData }, { upsert: true });
 }
+
 
 async function updateUserBalance(userId, amount) {
   const user = await User.findOneAndUpdate(
@@ -94,12 +103,14 @@ async function updateUserBalance(userId, amount) {
   return user.toObject();
 }
 
+
 async function addKeyToInventory(userId, rarity, quantity) {
   const user = await getUserData(userId);
   user.inventory = user.inventory || {};
   user.inventory[rarity] = (user.inventory[rarity] || 0) + quantity;
   await saveUserData(userId, { inventory: user.inventory });
 }
+
 
 // ===== DISCORD CLIENT SETUP =====
 const client = new Client({
@@ -108,29 +119,36 @@ const client = new Client({
     GatewayIntentBits.GuildMessages,
     GatewayIntentBits.MessageContent,
     GatewayIntentBits.GuildMessageReactions,
+    GatewayIntentBits.GuildMembers,  // ⬅️ ADDED: Required for member.roles.add()
   ],
 });
 
+
 client.commands = new Collection();
 const prefix = '.';
+
 
 // Ready event listener (BEFORE startBot)
 client.once('ready', () => {
   console.log(`✅ Logged in as ${client.user.tag}`);
 });
 
+
 // Global cooldowns
 const cooldowns = new Map();
 const COOLDOWN_MS = 5000;
+
 
 // Load commands dynamically (exclude keydrop.js)
 const commandsPath = path.join(__dirname, 'commands');
 let commandsModule = null; // Store reference to commands.js
 
+
 if (fs.existsSync(commandsPath)) {
   const commandFiles = fs
     .readdirSync(commandsPath)
     .filter(file => file.endsWith('.js') && file !== 'keydrop.js');
+
 
   for (const file of commandFiles) {
     try {
@@ -150,6 +168,7 @@ if (fs.existsSync(commandsPath)) {
   }
 }
 
+
 // Rarity config
 const rarities = [
   { name: 'Prismatic', chance: 0.0001 },
@@ -160,6 +179,7 @@ const rarities = [
   { name: 'Common', chance: 0.20 },
 ];
 
+
 const rewardsByRarity = {
   Prismatic: { min: 500, max: 1000 },
   Mythical: { min: 300, max: 600 },
@@ -169,11 +189,13 @@ const rewardsByRarity = {
   Common: { min: 10, max: 50 },
 };
 
+
 let guessGame = {
   active: false,
   number: null,
   channelId: null,
 };
+
 
 function getRandomRarity() {
   const roll = Math.random();
@@ -185,9 +207,11 @@ function getRandomRarity() {
   return rarities[rarities.length - 1].name;
 }
 
+
 // ===== MESSAGE HANDLER =====
 client.on('messageCreate', async (message) => {
   if (message.author.bot) return;
+
 
   // Passive key drop
   try {
@@ -195,6 +219,7 @@ client.on('messageCreate', async (message) => {
   } catch (error) {
     console.error('Error in keydrop:', error);
   }
+
 
   // Guessing game
   if (guessGame.active && message.channel.id === guessGame.channelId) {
@@ -206,15 +231,18 @@ client.on('messageCreate', async (message) => {
         const rewardAmount =
           Math.floor(Math.random() * (rewardRange.max - rewardRange.min + 1)) + rewardRange.min;
 
+
         const userData = await getUserData(message.author.id);
         userData.inventory = userData.inventory || {};
         userData.inventory[wonRarity] = (userData.inventory[wonRarity] || 0) + 1;
         userData.balance += rewardAmount;
 
+
         await saveUserData(message.author.id, {
           inventory: userData.inventory,
           balance: userData.balance,
         });
+
 
         const winEmbed = new EmbedBuilder()
           .setTitle('Game Winner!')
@@ -224,7 +252,9 @@ client.on('messageCreate', async (message) => {
           .setColor('Gold')
           .setTimestamp();
 
+
         message.channel.send({ embeds: [winEmbed] });
+
 
         guessGame.active = false;
         guessGame.number = null;
@@ -234,12 +264,15 @@ client.on('messageCreate', async (message) => {
     }
   }
 
+
   if (!message.content.startsWith(prefix)) return;
+
 
   const args = message.content.slice(prefix.length).trim().split(/ +/);
   const commandName = args.shift().toLowerCase();
   const command = client.commands.get(commandName);
   if (!command) return;
+
 
   // ===== CHECK IF COMMANDS ARE DISABLED =====
   if (commandsModule && !commandsModule.areCommandsEnabled()) {
@@ -249,6 +282,7 @@ client.on('messageCreate', async (message) => {
     }
   }
 
+
   // If trying to use .commands command, check admin permission first (silent block)
   if (commandName === 'commands') {
     if (!commandsModule || !commandsModule.canToggleCommands(message.member)) {
@@ -256,21 +290,26 @@ client.on('messageCreate', async (message) => {
     }
   }
 
+
   // Keys channel restriction
   const KEYS_CHANNEL_ID = '1401925188991582338';
   const allowedInKeysChannel = ['tkd','admin','claim', 'redeem', 'hangman', 'inventory', 'inv', 'bal', 'baltop', 'profile', 'setchannel','commands'];
 
+
   if (message.channel.id === KEYS_CHANNEL_ID && !allowedInKeysChannel.includes(command.name)) {
     return;
   }
+
 
   // Cooldown check
   if (!cooldowns.has(command.name)) {
     cooldowns.set(command.name, new Map());
   }
 
+
   const now = Date.now();
   const timestamps = cooldowns.get(command.name);
+
 
   if (timestamps.has(message.author.id)) {
     const expirationTime = timestamps.get(message.author.id) + COOLDOWN_MS;
@@ -282,12 +321,15 @@ client.on('messageCreate', async (message) => {
     }
   }
 
+
   timestamps.set(message.author.id, now);
   setTimeout(() => timestamps.delete(message.author.id), COOLDOWN_MS);
+
 
   // Execute command
   try {
     const userData = await getUserData(message.author.id);
+
 
     await command.execute({
       message,
@@ -316,6 +358,7 @@ client.on('messageCreate', async (message) => {
   }
 });
 
+
 // ===== START BOT =====
 async function startBot() {
   try {
@@ -323,12 +366,15 @@ async function startBot() {
       console.error('❌ MongoDB connection error:', err);
     });
 
+
     mongoose.connection.on('disconnected', () => {
       console.log('⚠️ MongoDB disconnected');
     });
 
+
     await mongoose.connect(process.env.MONGO_URI);
     console.log('✅ Connected to MongoDB');
+
 
     await client.login(process.env.DISCORD_TOKEN);
     console.log('🔄 Bot login initiated...');
@@ -337,5 +383,6 @@ async function startBot() {
     process.exit(1);
   }
 }
+
 
 startBot();
