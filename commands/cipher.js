@@ -1,10 +1,18 @@
+// commands/cipher.js
 const { EmbedBuilder } = require('discord.js');
-const User = require('../models/User'); // Your MongoDB User model
 
 module.exports = {
   name: 'cipher',
-  description: 'Start a cipher challenge with betting',
-  async execute({ message, args }) {
+  description: 'Start a cipher betting challenge',
+  /**
+   * @param {Object} ctx
+   * @param {import('discord.js').Message} ctx.message
+   * @param {string[]} ctx.args
+   * @param {Object} ctx.userData
+   * @param {Function} ctx.saveUserData
+   * @param {Function} ctx.getUserData
+   */
+  async execute({ message, args, userData, saveUserData, getUserData }) {
     const userId = message.author.id;
     const betAmount = parseInt(args[0]);
 
@@ -15,8 +23,8 @@ module.exports = {
           new EmbedBuilder()
             .setColor('Red')
             .setTitle('❌ Invalid Bet Amount')
-            .setDescription('**Usage:** `.cipher <amount>`\n\n**Example:** `.cipher 500`')
-        ]
+            .setDescription('**Usage:** `.cipher <amount>`\n\n**Example:** `.cipher 500`'),
+        ],
       });
     }
 
@@ -27,20 +35,15 @@ module.exports = {
           new EmbedBuilder()
             .setColor('Orange')
             .setTitle('⚠️ Challenge Already Active')
-            .setDescription('You already have an active cipher challenge! Finish it first or wait for the timer to expire.')
-        ]
+            .setDescription('You already have an active cipher challenge! Finish it first or wait for the timer to expire.'),
+        ],
       });
     }
 
-    // Get user from database
-    let user = await User.findOne({ userId });
-    if (!user) {
-      user = new User({ userId, balance: 0 });
-      await user.save();
-    }
+    // Ensure userData exists & has balance
+    const dbUser = await getUserData(userId);
 
-    // Check if user has enough balance
-    if (user.balance < betAmount) {
+    if (dbUser.balance < betAmount) {
       return message.channel.send({
         embeds: [
           new EmbedBuilder()
@@ -48,149 +51,158 @@ module.exports = {
             .setTitle('💰 Insufficient Balance')
             .setDescription(
               `You don't have enough coins to bet!\n\n` +
-              `**Your Balance:** ${user.balance} coins\n` +
+              `**Your Balance:** ${dbUser.balance} coins\n` +
               `**Bet Amount:** ${betAmount} coins\n` +
-              `**Needed:** ${betAmount - user.balance} more coins`
-            )
-        ]
+              `**Needed:** ${betAmount - dbUser.balance} more coins`
+            ),
+        ],
       });
     }
 
-    // Deduct bet amount from balance
-    user.balance -= betAmount;
-    await user.save();
+    // Deduct bet
+    dbUser.balance -= betAmount;
+    await saveUserData({ ...dbUser });
 
-    // Generate random secret message
+    // Possible secret messages (20)
     const messages = [
-      'FORGE MASTER', 'SHADOW BLADE', 'IRON THRONE', 'DRAGON SLAYER',
-      'CRYSTAL KNIGHT', 'FIRE STORM', 'GOLDEN SHIELD', 'THUNDER BOLT',
-      'MYSTIC RUNE', 'STEEL WARRIOR', 'DARK MAGIC', 'HOLY GRAIL',
-      'BLOOD MOON', 'ICE WIZARD', 'WIND WALKER', 'EARTH TITAN',
-      'VOID HUNTER', 'STAR GAZER', 'SOUL KEEPER', 'TIME BENDER'
+      'FORGE MASTER',
+      'SHADOW BLADE',
+      'IRON THRONE',
+      'DRAGON SLAYER',
+      'CRYSTAL KNIGHT',
+      'FIRE STORM',
+      'GOLDEN SHIELD',
+      'THUNDER BOLT',
+      'MYSTIC RUNE',
+      'STEEL WARRIOR',
+      'DARK MAGIC',
+      'HOLY GRAIL',
+      'BLOOD MOON',
+      'ICE WIZARD',
+      'WIND WALKER',
+      'EARTH TITAN',
+      'VOID HUNTER',
+      'STAR GAZER',
+      'SOUL KEEPER',
+      'TIME BENDER',
     ];
+
     const secretMessage = messages[Math.floor(Math.random() * messages.length)];
-    
-    // Generate 3 different ciphers
-    const ciphers = generateCiphers(secretMessage);
-    
-    // Time limits (2 minutes)
-    const timeLimit = 120000; // 120 seconds
-    const speedBonus = 60000; // 60 seconds for 3x multiplier
+    const upperSecret = secretMessage.toUpperCase();
+
+    // Generate ciphers
+    const ciphers = generateCiphers(upperSecret);
+
+    // Timing & rewards
+    const timeLimit = 120000; // 2 min
+    const speedBonus = 60000; // 60s
     const startTime = Date.now();
-    
-    // Calculate potential rewards
-    const baseReward = betAmount * 2; // 2x on normal win
-    const speedReward = betAmount * 3; // 3x on speed win
-    
-    // Create epic challenge embed
+
+    const baseReward = betAmount * 2; // 2x
+    const speedReward = betAmount * 3; // 3x
+
+    // Challenge embed
     const challengeEmbed = new EmbedBuilder()
       .setColor('#FF6B35')
       .setTitle('🔐 CIPHER CHALLENGE ACTIVATED!')
       .setDescription(
         `${message.author} has entered the **Cipher Arena**!\n\n` +
-        `💰 **Bet Amount:** ${betAmount} coins (deducted)\n` +
+        `💰 **Bet Amount:** ${betAmount} coins *(deducted)*\n` +
         `⏰ **Time Limit:** 2 minutes\n` +
-        `⚡ **Speed Bonus:** Complete in under 60s for 3x reward!\n` +
-        `❌ **Failure:** Lose your bet if time runs out\n\n` +
+        `⚡ **Speed Bonus:** Under 60s → 3x reward\n` +
+        `❌ **Fail:** Lose your bet if you run out of time or attempts\n\n` +
         `━━━━━━━━━━━━━━━━━━━━━━━━━━━\n` +
-        `**The secret message has been encoded with THREE different ciphers.**\n` +
-        `**Decode all three to reveal the answer!**\n` +
-        `━━━━━━━━━━━━━━━━━━━━━━━━━━━`
-      )
-      .addFields(
-        { 
-          name: '🔢 Cipher #1: Binary Code', 
-          value: `\`\`\`${ciphers.binary}\`\`\``,
-          inline: false 
-        },
-        { 
-          name: '🔄 Cipher #2: Reverse String', 
-          value: `\`\`\`${ciphers.reverse}\`\`\``,
-          inline: false 
-        },
-        { 
-          name: '🔀 Cipher #3: Atbash Cipher', 
-          value: `\`\`\`${ciphers.atbash}\`\`\``,
-          inline: false 
-        }
+        `**The secret message has been encoded with three ciphers.**\n` +
+        `Type the **decoded message** directly in this channel (no command needed).`
       )
       .addFields(
         {
+          name: '🔢 Cipher #1: Binary',
+          value: `\`\`\`${ciphers.binary}\`\`\``,
+        },
+        {
+          name: '🔄 Cipher #2: Reverse',
+          value: `\`\`\`${ciphers.reverse}\`\`\``,
+        },
+        {
+          name: '🔀 Cipher #3: Atbash',
+          value: `\`\`\`${ciphers.atbash}\`\`\``,
+        },
+        {
           name: '💎 Reward Breakdown',
-          value: 
-            `✅ **Normal Clear (under 2 min):** ${baseReward} coins\n` +
-            `⚡ **Speed Clear (under 60s):** ${speedReward} coins`,
-          inline: false
-        }
+          value:
+            `✅ **Clear < 2 min:** ${baseReward} coins (2x)\n` +
+            `⚡ **Clear < 60s:** ${speedReward} coins (3x)`,
+        },
       )
-      .setFooter({ text: '💡 Tip: Just type the decoded message in this channel!' })
+      .setFooter({ text: 'Hint: Work out all three ciphers to find the true message.' })
       .setTimestamp();
 
     await message.channel.send({ embeds: [challengeEmbed] });
 
-    // Initialize challenge tracking system
-    if (!global.activeChallenges) {
-      global.activeChallenges = new Map();
-    }
-    
-    // Store challenge data
-    global.activeChallenges.set(userId, {
-      answer: secretMessage.toUpperCase(),
-      startTime: startTime,
-      timeLimit: timeLimit,
-      speedBonus: speedBonus,
-      betAmount: betAmount,
-      baseReward: baseReward,
-      speedReward: speedReward,
+    // Init map
+    if (!global.activeChallenges) global.activeChallenges = new Map();
+
+    // Store challenge
+    const challenge = {
+      answer: upperSecret,
+      startTime,
+      timeLimit,
+      speedBonus,
+      betAmount,
+      baseReward,
+      speedReward,
       channelId: message.channel.id,
-      attempts: 0
-    });
+      attempts: 0,
+      userId,
+    };
 
-    // Set automatic failure timeout
     const timeoutId = setTimeout(async () => {
-      if (global.activeChallenges.has(userId)) {
-        global.activeChallenges.delete(userId);
-        
-        const failEmbed = new EmbedBuilder()
-          .setColor('Red')
-          .setTitle('⏰ TIME EXPIRED!')
-          .setDescription(
-            `${message.author}, you ran out of time!\n\n` +
-            `**The correct answer was:** \`${secretMessage}\`\n\n` +
-            `💀 **Lost:** ${betAmount} coins\n` +
-            `📊 **New Balance:** ${user.balance} coins\n\n` +
-            `*Better luck next time, challenger!*`
-          )
-          .setTimestamp();
+      if (!global.activeChallenges || !global.activeChallenges.has(userId)) return;
 
-        message.channel.send({ embeds: [failEmbed] });
-      }
+      global.activeChallenges.delete(userId);
+
+      const latestUser = await getUserData(userId);
+
+      const failEmbed = new EmbedBuilder()
+        .setColor('Red')
+        .setTitle('⏰ TIME EXPIRED!')
+        .setDescription(
+          `${message.author}, you ran out of time!\n\n` +
+          `**The correct answer was:** \`${upperSecret}\`\n\n` +
+          `💀 **Lost:** ${betAmount} coins\n` +
+          `💳 **Current Balance:** ${latestUser.balance} coins\n` +
+          `*The forge is unforgiving. Try again later.*`
+        )
+        .setTimestamp();
+
+      message.channel.send({ embeds: [failEmbed] });
     }, timeLimit);
 
-    // Store timeout ID so we can cancel it if they win
-    global.activeChallenges.get(userId).timeoutId = timeoutId;
-  }
+    challenge.timeoutId = timeoutId;
+    global.activeChallenges.set(userId, challenge);
+  },
 };
 
-// Cipher generation helper function
+// Helper: generate ciphers from UPPERCASE text
 function generateCiphers(text) {
-  // 1. Binary Cipher - Convert each character to 8-bit binary
+  // Binary (8-bit ASCII, space preserved)
   const binary = text.split('').map(char => {
-    if (char === ' ') return '00100000'; // Space in binary
+    if (char === ' ') return '00100000';
     return char.charCodeAt(0).toString(2).padStart(8, '0');
   }).join(' ');
 
-  // 2. Reverse Cipher - Simply reverse the entire string
+  // Reverse
   const reverse = text.split('').reverse().join('');
 
-  // 3. Atbash Cipher - A↔Z, B↔Y, C↔X, etc.
+  // Atbash
   const atbash = text.split('').map(char => {
     if (char === ' ') return ' ';
-    
-    if (char.match(/[A-Z]/)) {
-      return String.fromCharCode(90 - (char.charCodeAt(0) - 65));
-    } else if (char.match(/[a-z]/)) {
-      return String.fromCharCode(122 - (char.charCodeAt(0) - 97));
+    if (char >= 'A' && char <= 'Z') {
+      return String.fromCharCode(90 - (char.charCodeAt(0) - 65)); // A↔Z
+    }
+    if (char >= 'a' && char <= 'z') {
+      return String.fromCharCode(122 - (char.charCodeAt(0) - 97)); // a↔z
     }
     return char;
   }).join('');
